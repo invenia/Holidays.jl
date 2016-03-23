@@ -306,10 +306,8 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
     end
 end
 
-function Canada(;region="", years::Union{Int, Array{Int}, Set{Int}}=Set([]))
-    if isa(years, Int) || isa(years, Array)
-        years = Set(years)
-    end
+function Canada( ; region="", years::Array{Int}=Int[])
+    years = Set(years)
 
     holidays = Dict{Date,AbstractString}()
 
