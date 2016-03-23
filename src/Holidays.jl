@@ -13,6 +13,14 @@ type HolidayBase
     dates::Dict{Date,AbstractString}
 end
 
+function dayName(date::Date, holidays::HolidayBase)
+    if haskey(holidays.dates, date)
+        return holidays.dates[date]
+    else
+        return Void
+    end
+end
+
 function nthWeekday(start, weekday, count)
     Dates.tonext(start) do x
         Dates.dayofweek(x) == weekday &&
@@ -48,20 +56,17 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
     feb1 = Date(year, 2, 1)
     if region in ["AB", "SK", "ON"] && year >= 2008
         days[nthWeekday(feb1, Dates.Monday, 3) ] = "Family Day"
-
     elseif region in ["AB", "SK"] && year >= 2007
         days[nthWeekday(feb1, Dates.Monday, 3) ] = "Family Day"
-
     elseif region == "AB" && year >= 1990
         days[nthWeekday(feb1, Dates.Monday, 3) ] = "Family Day"
-
     elseif region == "BC" && year >= 2013
         days[nthWeekday(feb1, Dates.Monday, 2) ] = "Family Day"
-
     elseif region == "MB" && year >= 2008
         days[nthWeekday(feb1, Dates.Monday, 3) ] = "Louis Riel Day"
-
     end
+
+
 
 end
 

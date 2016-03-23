@@ -1,10 +1,19 @@
 from datetime import date
 import holidays
 
-us_holidays = holidays.UnitedStates()  # or holidays.US()
+dates = None
 
 def get(julia_date):
     #~ return date(year, month, day) in us_holidays
-    return us_holidays.get(julia_date)
+    return dates.get(julia_date)
 
+def load(country, region):
+    global dates
+
+    if country == "US":
+        dates = holidays.US(state=region)
+    elif country == "CA":
+        dates = holidays.CA(prov=region)
+    else:
+        print "UNKNOWN COUNTRY ",country
 
