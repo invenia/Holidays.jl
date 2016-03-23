@@ -17,6 +17,11 @@ observed = true
 
 weekend = [Dates.Saturday, Dates.Sunday]
 
+# Shorthand
+dayofweek = Dates.dayofweek
+
+# Functions
+
 type HolidayBase
     country::AbstractString
     region::AbstractString
@@ -25,6 +30,12 @@ type HolidayBase
 end
 
 function dayName(date::Date, holidays::HolidayBase)
+    # Expand dict
+    if !(Dates.year(date) in holidays.years)
+        populate_canadian(holidays.dates, holidays.region, Dates.year(date))
+        push!(holidays.years, Dates.year(date))
+    end
+
     if haskey(holidays.dates, date)
         return holidays.dates[date]
     else
@@ -34,14 +45,14 @@ end
 
 function nthWeekday(start, weekday, count)
     Dates.tonext(start) do x
-        Dates.dayofweek(x) == weekday &&
+        dayofweek(x) == weekday &&
         Dates.dayofweekofmonth(x) == count
     end
 end
 
 # Returns same date if this is is 'weekday'
 function next_weekday(date, weekday)
-    if Dates.dayofweek(date) == weekday
+    if dayofweek(date) == weekday
         return date
     end
 
@@ -49,7 +60,7 @@ function next_weekday(date, weekday)
 end
 
 function prev_weekday(date, weekday)
-    if Dates.dayofweek(date) == weekday
+    if dayofweek(date) == weekday
         return date
     end
 
@@ -104,11 +115,17 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
         days[date] = name
 
         if observed
-            if Dates.dayofweek(date) == Dates.Sunday
+            if dayofweek(date) == Dates.Sunday
                 days[date + Dates.Day(1)] = name * " (Observed)"
-            elseif Dates.dayofweek(date) == Dates.Saturday
+            elseif dayofweek(date) == Dates.Saturday
                 days[date + Dates.Day(-1)] = name * " (Observed)"
             end
+        end
+
+        # The next year's observed New Year's Day can be in this year
+        # when it falls on a Friday (Jan 1st is a Saturday)
+        if observed && dayofweek(Date(year, 12, 31)) == Dates.Friday
+            days[Date(year, 12, 31)] = name * " (Observed)"
         end
     end
 
@@ -138,7 +155,6 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
 
     # St. Patrick's Day
     if region == "NL" && year >= 1900
-
         days[nearest(Date(year, 3, 17), Dates.Monday)] = "St. Patrick's Day"
     end
 
@@ -164,13 +180,22 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
 
     # Victoria Day / National Patriotes Day (QC)
     if !(region in ["NB", "NS", "PE", "NL", "QC"]) && year >= 1953
-
-        date = Dates.toprev(x->Dates.dayofweek(x) == Dates.Monday, Date(year, 5, 24))
+        date = prev_weekday(Date(year, 5, 24), Dates.Monday)
         days[date] = "Victoria Day"
 
     elseif region == "QC" && year >= 1953
-        date = Dates.toprev(x->Dates.dayofweek(x) == Dates.Monday, Date(year, 5, 24))
+        date = prev_weekday(Date(year, 5, 24), Dates.Monday)
         days[date] = "National Patriotes Day"
+    end
+
+
+    # Victoria Day / National Patriotes Day (QC)
+    if !(region in ["NB", "NS", "PE", "NL", "QC"]) && year >= 1953
+        days[prev_weekday(Date(year, 5, 24), Dates.Monday)] = "Victoria Day"
+
+    elseif region == "QC" && year >= 1953
+        name = "National Patriotes Day"
+        days[prev_weekday(Date(year, 5, 24), Dates.Monday)] = name
     end
 
     # National Aboriginal Day
@@ -181,7 +206,7 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
     # St. Jean Baptiste Day
     if region == "QC" && year >= 1925
         days[Date(year, 6, 24)] = "St. Jean Baptiste Day"
-        if observed && Dates.dayofweek(Date(year, 6, 24)) == Dates.Sunday
+        if observed && dayofweek(Date(year, 6, 24)) == Dates.Sunday
             days[Date(year, 6, 25)] = "St. Jean Baptiste Day (Observed)"
         end
     end
@@ -199,7 +224,7 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
         date = Date(year, 7, 1)
         name = "Canada Day"
         days[date] = name
-        if observed && Dates.dayofweek(date) in weekend
+        if observed && dayofweek(date) in weekend
             days[next_weekday(date, Dates.Monday)] = name * " (Observed)"
         end
 
@@ -208,7 +233,7 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
         date = Date(year, 7, 1)
 
         days[date] = name
-        if observed && Dates.dayofweek(date) in weekend
+        if observed && dayofweek(date) in weekend
             days[next_weekday(date, Dates.Monday)] = name * " (Observed)"
         end
     end
@@ -216,7 +241,7 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
     # Nunavut Day
     if region == "NU" && year >= 2001
         days[Date(year, 7, 9)] = "Nunavut Day"
-        if observed && Dates.dayofweek(Date(year, 7, 9)) == Dates.Sunday
+        if observed && dayofweek(Date(year, 7, 9)) == Dates.Sunday
             days[Date(year, 7, 10)] = "Nunavut Day (Observed)"
         end
     elseif region == "NU" && year == 2000
@@ -249,21 +274,34 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
 
     elseif region in ["NS", "NL", "NT", "PE", "SK"] && year >= 1931
         days[Date(year, 11, 11)] = name
-        if observed && Dates.dayofweek(Date(year, 11, 11)) == Dates.Sunday
-            name = name + " (Observed)"
-            #~ self[date(year, 11, 11) + rd(weekday=MO)] = name
-            self[next_weekday(Date(year, 11, 11), Dates.Monday)] = name
+        if observed && dayofweek(Date(year, 11, 11)) == Dates.Sunday
+            name = name * " (Observed)"
+            days[next_weekday(Date(year, 11, 11), Dates.Monday)] = name
         end
     end
 
      # Christmas Day
     if year >= 1867
         days[Date(year, 12, 25)] = "Christmas Day"
-        if observed && Dates.dayofweek(Date(year, 12, 25)) == Dates.Saturday
+        if observed && dayofweek(Date(year, 12, 25)) == Dates.Saturday
             days[Date(year, 12, 24)] = "Christmas Day (Observed)"
 
-        elseif observed && Dates.dayofweek(Date(year, 12, 25)) == Dates.Sunday
+        elseif observed && dayofweek(Date(year, 12, 25)) == Dates.Sunday
             days[Date(year, 12, 26)] = "Christmas Day (Observed)"
+        end
+    end
+
+    # Boxing Day
+    if year >= 1867
+        name = "Boxing Day"
+        name_observed = name * " (Observed)"
+        if observed && dayofweek(Date(year, 12, 26)) in weekend
+            days[next_weekday(Date(year, 12, 26), Dates.Monday)] = name_observed
+
+        elseif observed && dayofweek(Date(year, 12, 26)) == Dates.Monday
+            days[Date(year, 12, 27)] = name_observed
+        else
+            days[Date(year, 12, 26)] = name
         end
     end
 end

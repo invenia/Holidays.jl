@@ -6,14 +6,17 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 @pyimport pyholiday
 
+# Constants
+
 # Add regions to test here
 regions = Dict(
-    "CA"=>["MB", "NL", "QC", "NU"]
+    #~ "CA"=>["MB", "NL", "QC", "NU"]
+    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
 )
 
 # Set first and last date in loop
-start_date = Date(2016, 1, 1)
-last_date = Date(2017, 1, 1)
+start_date = Date(2000, 1, 1)
+last_date = Date(2030, 1, 1)
 
 function day_names_equal(x, y)
     if isa(x, AbstractString) && isa(y, AbstractString)
@@ -40,8 +43,8 @@ function compareHolidays(country, province)
             println("Failure on ",date, " - Python: ",x,", Julia: ",y)
 
         # Record holidays that matched:
-        elseif isa(x, AbstractString) && isa(y, AbstractString)
-            println("Success on ",date, " - Python: ",x,", Julia: ",y)
+        #elseif isa(x, AbstractString) && isa(y, AbstractString)
+        #    println("Success on ",date, " - Python: ",x,", Julia: ",y)
         end
 
         date = date + Dates.Day(1)
@@ -129,3 +132,5 @@ end
 
 loop_regions()
 # test_easter()
+
+
