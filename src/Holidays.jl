@@ -1,10 +1,21 @@
-VERSION >= v"0.4-" && __precompile__()
+VERSION >= v"0.4-" #&& __precompile__()
 
 module Holidays
 
 if VERSION < v"0.4-dev"
     using Dates
 end
+
+# Credits:
+
+# This program closely borrows the logic for calculating most holidays from
+# https://github.com/ryanss/holidays.py
+# Calculating easter is done using a julia port of IanTaylorEasterJscr(year) from
+# https://en.wikipedia.org/wiki/Computus#Algorithms
+
+observed = true
+
+weekend = [Dates.Saturday, Dates.Sunday]
 
 type HolidayBase
     country::AbstractString
@@ -28,19 +39,33 @@ function nthWeekday(start, weekday, count)
     end
 end
 
-# Adapted from https://en.wikipedia.org/wiki/Computus#Algorithms -- this should be tested for non-gregorian years
-# def IanTaylorEasterJscr(year):
-#     a = year % 19
-#     b = year >> 2
-#     c = b // 25 + 1
-#     d = (c * 3) >> 2
-#     e = ((a * 19) - ((c * 8 + 5) // 25) + d + 15) % 30
-#     e += (29578 - a - e * 32) >> 10
-#     e -= ((year % 7) + b - d + e + 2) % 7
-#     d = e >> 5
-#     day = e - d * 31
-#     month = d + 3
-#     return year, month, day
+# Returns same date if this is is 'weekday'
+function next_weekday(date, weekday)
+    if Dates.dayofweek(date) == weekday
+        return date
+    end
+
+    Dates.tonext(x->Dates.dayofweek(x) == weekday, date)
+end
+
+function prev_weekday(date, weekday)
+    if Dates.dayofweek(date) == weekday
+        return date
+    end
+
+    Dates.toprev(x->Dates.dayofweek(x) == weekday, date)
+end
+
+function nearest(date, weekday)
+    dt1 = prev_weekday(date, weekday)
+    dt2 = next_weekday(date, weekday)
+
+    if dt2 - date <= date - dt1
+        return dt2
+    else
+        return dt1
+    end
+end
 
 #Returns the 'western' easter listed in https://en.wikipedia.org/wiki/List_of_dates_for_Easter
 function easter(year)
@@ -57,6 +82,20 @@ function easter(year)
     return Date(year, month, day)
 end
 
+# Adapted from https://en.wikipedia.org/wiki/Computus#Algorithms
+# def IanTaylorEasterJscr(year):
+#     a = year % 19
+#     b = year >> 2
+#     c = b // 25 + 1
+#     d = (c * 3) >> 2
+#     e = ((a * 19) - ((c * 8 + 5) // 25) + d + 15) % 30
+#     e += (29578 - a - e * 32) >> 10
+#     e -= ((year % 7) + b - d + e + 2) % 7
+#     d = e >> 5
+#     day = e - d * 31
+#     month = d + 3
+#     return year, month, day
+
 function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
     # New Year's Day
     if year >= 1867
@@ -64,10 +103,12 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
         date = Date(year, 1, 1)
         days[date] = name
 
-        if Dates.dayofweek(date) == Dates.Sunday
-            days[date + Dates.Day(1)] = name * " (Observed)"
-        elseif Dates.dayofweek(date) == Dates.Saturday
-            days[date + Dates.Day(-1)] = name * " (Observed)"
+        if observed
+            if Dates.dayofweek(date) == Dates.Sunday
+                days[date + Dates.Day(1)] = name * " (Observed)"
+            elseif Dates.dayofweek(date) == Dates.Saturday
+                days[date + Dates.Day(-1)] = name * " (Observed)"
+            end
         end
     end
 
@@ -97,23 +138,133 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
 
     # St. Patrick's Day
     if region == "NL" && year >= 1900
-        date = Date(year, 3, 17)
 
-        dt1 = Dates.toprev(x->Dates.dayofweek(x) == Dates.Monday, date)
-        dt2 = Dates.tonext(x->Dates.dayofweek(x) == Dates.Monday, date)
-
-        if dt2 - date <= date - dt1
-            days[dt2] = "St. Patrick's Day"
-        else
-            days[dt1] = "St. Patrick's Day"
-        end
+        days[nearest(Date(year, 3, 17), Dates.Monday)] = "St. Patrick's Day"
     end
 
     # Good Friday
     if region != "QC" && year >= 1867
-        easter_day = easter(year)
-        good_friday = Dates.toprev(x->Dates.dayofweek(x) == Dates.Friday, easter_day)
-        days[good_friday] = "Good Friday"
+        days[ Dates.toprev(x->Dates.dayofweek(x) == Dates.Friday, easter(year)) ] = "Good Friday"
+    end
+
+    # Easter Monday
+    if region == "QC" && year >= 1867
+        days[easter(year) + Dates.Day(1)] = "Easter Monday"
+    end
+
+    # St. George's Day
+    if region == "NL" && year == 2010
+        # 4/26 is the Monday closer to 4/23 in 2010
+        # but the holiday was observed on 4/19? Crazy Newfies!
+        days[Date(2010, 4, 19)] = "St. George's Day"
+
+    elseif region == "NL" && year >= 1990
+        days[nearest(Date(year, 4, 23), Dates.Monday)] = "St. George's Day"
+    end
+
+    # Victoria Day / National Patriotes Day (QC)
+    if !(region in ["NB", "NS", "PE", "NL", "QC"]) && year >= 1953
+
+        date = Dates.toprev(x->Dates.dayofweek(x) == Dates.Monday, Date(year, 5, 24))
+        days[date] = "Victoria Day"
+
+    elseif region == "QC" && year >= 1953
+        date = Dates.toprev(x->Dates.dayofweek(x) == Dates.Monday, Date(year, 5, 24))
+        days[date] = "National Patriotes Day"
+    end
+
+    # National Aboriginal Day
+    if region == "NT" && year >= 1996
+        days[Date(year, 6, 21)] = "National Aboriginal Day"
+    end
+
+    # St. Jean Baptiste Day
+    if region == "QC" && year >= 1925
+        days[Date(year, 6, 24)] = "St. Jean Baptiste Day"
+        if observed && Dates.dayofweek(Date(year, 6, 24)) == Dates.Sunday
+            days[Date(year, 6, 25)] = "St. Jean Baptiste Day (Observed)"
+        end
+    end
+
+    # Discovery Day
+    if region == "NL" && year >= 1997
+        days[ nearest(Date(year, 6, 24), Dates.Monday) ] = "Discovery Day"
+
+    elseif region == "YU" && year >= 1912
+        days[nthWeekday(Date(year, 8, 1), Dates.Monday, 3) ] = "Discovery Day"
+    end
+
+    # Canada Day / Memorial Day (NL)
+    if region != "NL" && year >= 1867
+        date = Date(year, 7, 1)
+        name = "Canada Day"
+        days[date] = name
+        if observed && Dates.dayofweek(date) in weekend
+            days[next_weekday(date, Dates.Monday)] = name * " (Observed)"
+        end
+
+    elseif year >= 1867
+        name = "Memorial Day"
+        date = Date(year, 7, 1)
+
+        days[date] = name
+        if observed && Dates.dayofweek(date) in weekend
+            days[next_weekday(date, Dates.Monday)] = name * " (Observed)"
+        end
+    end
+
+    # Nunavut Day
+    if region == "NU" && year >= 2001
+        days[Date(year, 7, 9)] = "Nunavut Day"
+        if observed && Dates.dayofweek(Date(year, 7, 9)) == Dates.Sunday
+            days[Date(year, 7, 10)] = "Nunavut Day (Observed)"
+        end
+    elseif region == "NU" && year == 2000
+        days[Date(2000, 4, 1)] = "Nunavut Day"
+    end
+
+    # Civic Holiday / British Columbia Day
+    if region in ["SK", "ON", "MB", "NT"] && year >= 1900
+        days[next_weekday(Date(year, 8, 1), Dates.Monday)] = "Civic Holiday"
+
+    elseif region == "BC" && year >= 1974
+        days[next_weekday(Date(year, 8, 1), Dates.Monday)] = "British Columbia Day"
+    end
+
+     # Labour Day
+    if year >= 1894
+        days[next_weekday(Date(year, 9, 1), Dates.Monday)] = "Labour Day"
+    end
+
+    # Thanksgiving
+    if !(region in ["NB", "NS", "PE", "NL"]) && year >= 1931
+        days[nthWeekday(Date(year, 10, 1), Dates.Monday, 2) ] = "Thanksgiving"
+    end
+
+     # Remembrance Day
+    name = "Remembrance Day"
+    provinces = ["ON", "QC", "NS", "NL", "NT", "PE", "SK"]
+    if ! (region in provinces) && year >= 1931
+        days[Date(year, 11, 11)] = name
+
+    elseif region in ["NS", "NL", "NT", "PE", "SK"] && year >= 1931
+        days[Date(year, 11, 11)] = name
+        if observed && Dates.dayofweek(Date(year, 11, 11)) == Dates.Sunday
+            name = name + " (Observed)"
+            #~ self[date(year, 11, 11) + rd(weekday=MO)] = name
+            self[next_weekday(Date(year, 11, 11), Dates.Monday)] = name
+        end
+    end
+
+     # Christmas Day
+    if year >= 1867
+        days[Date(year, 12, 25)] = "Christmas Day"
+        if observed && Dates.dayofweek(Date(year, 12, 25)) == Dates.Saturday
+            days[Date(year, 12, 24)] = "Christmas Day (Observed)"
+
+        elseif observed && Dates.dayofweek(Date(year, 12, 25)) == Dates.Sunday
+            days[Date(year, 12, 26)] = "Christmas Day (Observed)"
+        end
     end
 end
 

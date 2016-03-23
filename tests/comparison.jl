@@ -6,6 +6,15 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 @pyimport pyholiday
 
+# Add regions to test here
+regions = Dict(
+    "CA"=>["MB", "NL", "QC", "NU"]
+)
+
+# Set first and last date in loop
+start_date = Date(2016, 1, 1)
+last_date = Date(2017, 1, 1)
+
 function day_names_equal(x, y)
     if isa(x, AbstractString) && isa(y, AbstractString)
         return x == y
@@ -20,9 +29,7 @@ function compareHolidays(country, province)
     dates = Holidays.Canada(region=province, years=2016)
     pyholiday.load(country, province)
 
-    # Set first and last date to test here
-    date = Date(2016, 1, 1)
-    last_date = Date(2017, 1, 1)
+    date = start_date
 
     @time while date < last_date
         x = pyholiday.get(date)
@@ -42,11 +49,6 @@ function compareHolidays(country, province)
 end
 
 function loop_regions()
-    # Add regions to test here
-    regions = Dict(
-        "CA"=>["MB", "NL"]
-    )
-
     for (country, provinces) in regions
         println("Testing country ",country)
         for province in provinces
