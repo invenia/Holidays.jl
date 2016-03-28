@@ -18,5 +18,11 @@ def load(country, region):
         dates = holidays.MX()
     elif country == "NZ":
         dates = holidays.NZ(prov=region)
+    elif country == "AU":
+        dates = holidays.AU(prov=region)
+    elif country == "AT":
+        dates = holidays.AT(prov=region)
+    elif country == "DE":
+        dates = holidays.DE(prov=region)
     else:
         print "UNKNOWN COUNTRY ",country

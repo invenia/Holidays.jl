@@ -886,9 +886,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
         # If on Friday, observed on Thursday
         if observed && dayofweek(Date(year, 12, 24)) == Dates.Friday
             title(days, Date(year, 12, 23), name)
-        # If on Saturday or Sunday, observed on Friday
         elseif observed && dayofweek(Date(year, 12, 24)) in weekend
-            # title(days, Date(year, 12, 24) + rd(weekday=FR(-1)), name)
             title(days, sub_day(Date(year, 12, 24), Friday, 1), name)
         end
     end
@@ -1224,11 +1222,216 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ye
     end
 end
 
+function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
+    # ACT:  Holidays Act 1958
+    # NSW:  Public Holidays Act 2010
+    # NT:   Public Holidays Act 2013
+    # QLD:  Holidays Act 1983
+    # SA:   Holidays Act 1910
+    # TAS:  Statutory Holidays Act 2000
+    # VIC:  Public Holidays Act 1993
+    # WA:   Public and Bank Holidays Act 1972
+
+    # TODO do more research on history of Aus holidays
+
+    # New Year's Day
+    name = "New Year's Day"
+    jan1 = Date(year, 1, 1)
+    title(days, jan1, name)
+    if observed && dayofweek(jan1) in weekend
+        title(days, add_day(jan1, Monday, 1), name * " (Observed)")
+    end
+
+    # Australia Day
+    jan26 = Date(year, 1, 26)
+    if year >= 1935
+        if region == "NSW" && year < 1946
+            name = "Anniversary Day"
+        else
+            name = "Australia Day"
+        end
+
+        title(days, jan26, name)
+        if observed && year >= 1946 && dayofweek(jan26) in weekend
+            title(days, add_day(jan26, Monday, 1), name * " (Observed)")
+        end
+    elseif year >= 1888 && region != "SA"
+        name = "Anniversary Day"
+        title(days, jan26, name)
+    end
+
+    # Adelaide Cup
+    if region == "SA"
+        name = "Adelaide Cup"
+        if year >= 2006
+            # subject to proclamation ?!?!
+            title(days, add_day(Date(year, 3, 1), Monday, 2), name)
+        else
+            title(days, add_day(Date(year, 3, 1), Monday, 3), name)
+        end
+    end
+
+    # Canberra Day
+    if region == "ACT"
+        name = "Canberra Day"
+        title(days, add_day(Date(year, 3, 1), Monday, 1), name)
+    end
+
+    # Easter
+    title(days, sub_day(easter(year), Friday, 1), "Good Friday")
+    if region in ("ACT", "NSW", "NT", "QLD", "SA", "VIC")
+        title(days, sub_day(easter(year), Saturday, 1), "Easter Saturday")
+    end
+
+    if region == "NSW"
+        title(days, easter(year), "Easter Sunday")
+    end
+    title(days, add_day(easter(year), Monday, 1), "Easter Monday")
+
+#~     # Anzac Day
+#~     if year > 1920
+#~         name = "Anzac Day"
+#~         apr25 = Date(year, 4, 25)
+#~         title(days, apr25, name)
+#~         if observed
+#~             if dayofweek(apr25) == SATURDAY && region in ("WA", "NT")
+#~                 title(days, apr25 + rd(weekday=MO), name * " (Observed)")
+#~             elseif dayofweek((apr25) == SUNDAY and
+#~                   region in ("ACT", "QLD", "SA", "WA", "NT"))
+#~                 title(days, apr25 + rd(weekday=MO), name * " (Observed)")
+
+#~     # Western Australia Day
+#~     if region == "WA" && year > 1832
+#~         if year >= 2015
+#~             name = "Western Australia Day"
+#~         else
+#~             name = "Foundation Day"
+#~         title(days, Date(year, 6, 1) + rd(weekday=MO(+1)), name)
+
+#~     # Sovereign's Birthday
+#~     if year >= 1952
+#~         name = "Queen's Birthday"
+#~     elseif year > 1901
+#~         name = "King's Birthday"
+#~     if year >= 1936
+#~         name = "Queen's Birthday"
+#~         if region == "QLD"
+#~             if year == 2012
+#~                 title(days, Date(year, 10, 1), name)
+#~                 title(days, Date(year, 6, 11), "Queen's Diamond Jubilee")
+#~             else
+#~                 dt = Date(year, 6, 1) + rd(weekday=MO(+2))
+#~                 title(days, dt, name)
+#~         elseif region == "WA"
+#~             # by proclamation ?!?!
+#~             title(days, Date(year, 10, 1) + rd(weekday=MO(-1)), name)
+#~         else
+#~             dt = Date(year, 6, 1) + rd(weekday=MO(+2))
+#~             title(days, dt, name)
+#~     elseif year > 1911
+#~         title(days, Date(year, 6, 3), name   ) George V
+#~     elseif year > 1901
+#~         title(days, Date(year, 11, 9), name  ) Edward VII
+
+#~     # Picnic Day
+#~     if region == "NT"
+#~         name = "Picnic Day"
+#~         title(days, Date(year, 8, 1) + rd(weekday=MO), name)
+
+#~     # Labour Day
+#~     name = "Labour Day"
+#~     if region in ("NSW", "ACT", "SA")
+#~         title(days, Date(year, 10, 1) + rd(weekday=MO), name)
+#~     elseif region == "WA"
+#~         title(days, Date(year, 3, 1) + rd(weekday=MO), name)
+#~     elseif region == "VIC"
+#~         title(days, Date(year, 3, 1) + rd(weekday=MO(+2)), name)
+#~     elseif region == "QLD"
+#~         if 2013 <= year <= 2015
+#~             title(days, Date(year, 10, 1) + rd(weekday=MO), name)
+#~         else
+#~             title(days, Date(year, 5, 1) + rd(weekday=MO), name)
+#~     elseif region == "NT"
+#~         name = "May Day"
+#~         title(days, Date(year, 5, 1) + rd(weekday=MO), name)
+#~     elseif region == "TAS"
+#~         name = "Eight Hours Day"
+#~         title(days, Date(year, 3, 1) + rd(weekday=MO(+2)), name)
+
+#~     # Family & Community Day
+#~     if region == "ACT"
+#~         name = "Family & Community Day"
+#~         if 2007 <= year <= 2009
+#~             title(days, Date(year, 11, 1) + rd(weekday=TU), name)
+#~         elseif year == 2010
+#~             # first Monday of the September/October school holidays
+#~             # moved to the second Monday if this falls on Labour day
+#~             # TODO need a formula for the ACT school holidays then
+#~             # http://www.cmd.act.gov.au/communication/holidays
+#~             title(days, Date(year, 9, 26), name)
+#~         elseif year == 2011
+#~             title(days, Date(year, 10, 10), name)
+#~         elseif year == 2012
+#~             title(days, Date(year, 10, 8), name)
+#~         elseif year == 2013
+#~             title(days, Date(year, 9, 30), name)
+#~         elseif year == 2014
+#~             title(days, Date(year, 9, 29), name)
+#~         elseif year == 2015
+#~             title(days, Date(year, 9, 28), name)
+#~         elseif year == 2016
+#~             title(days, Date(year, 9, 26), name)
+#~         elseif 2017 <= year <= 2020
+#~             labour_day = Date(year, 10, 1) + rd(weekday=MO)
+#~             if year == 2017
+#~                 dt = Date(year, 9, 23) + rd(weekday=MO)
+#~             elseif year == 2018
+#~                 dt = Date(year, 9, 29) + rd(weekday=MO)
+#~             elseif year == 2019
+#~                 dt = Date(year, 9, 28) + rd(weekday=MO)
+#~             elseif year == 2020
+#~                 dt = Date(year, 9, 26) + rd(weekday=MO)
+#~             if dt == labour_day
+#~                 dt += rd(weekday=MO(+1))
+#~             title(days, Date(year, 9, 26), name)
+
+#~     # Melbourne Cup
+#~     if region == "VIC"
+#~         name = "Melbourne Cup"
+#~         title(days, Date(year, 11, 1) + rd(weekday=TU), name)
+
+#~     # Christmas Day
+#~     name = "Christmas Day"
+#~     dec25 = Date(year, 12, 25)
+#~     title(days, dec25, name)
+#~     if observed && dayofweek(dec25) in weekend
+#~         title(days, Date(year, 12, 27), name * " (Observed)")
+
+#~     # Boxing Day
+#~     if region == "SA"
+#~         name = "Proclamation Day"
+#~     else
+#~         name = "Boxing Day"
+#~     dec26 = Date(year, 12, 26)
+#~     title(days, dec26, name)
+#~     if observed && dayofweek(dec26) in weekend
+#~         title(days, Date(year, 12, 28), name * " (Observed)")
+end
+
+function populate_at(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
+end
+
+function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
+end
+
 populators =  Dict{AbstractString, Function}(
     "US"=>populate_us,
     "CA"=>populate_ca,
     "MX"=>populate_mx,
-    "NZ"=>populate_nz
+    "NZ"=>populate_nz,
+    "AU"=>populate_au,
+    "AT"=>populate_at,
+    "DE"=>populate_de
 )
 
 function Cache(; country="CA", region="MB", years::Array{Int}=Int[])
