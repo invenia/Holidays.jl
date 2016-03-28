@@ -106,7 +106,6 @@ function title(cache, date, day)
     else
         cache[date] = day
     end
-
 end
 
 # Adapted from https://en.wikipedia.org/wiki/Computus#Algorithms
@@ -316,7 +315,7 @@ end
 
 function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
     # New Year's Day
-    if year >= 1870
+    if year > 1870
         name = "New Year's Day"
         date = Date(year, 1, 1)
         title(days, date, name)

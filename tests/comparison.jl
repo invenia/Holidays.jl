@@ -12,16 +12,33 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 # Constants
 
+# All regions:
+## Australia    AU  prov = ACT (default), NSW, NT, QLD, SA, TAS, VIC, WA
+## Austria  AT  prov = B, K, N, O, S, ST, T, V, W (default)
+## Canada   CA  prov = AB, BC, MB, NB, NL, NS, NT, NU, ON (default), PE, QC, SK, YU
+## Germany  DE  BW, BY, BE, BB, HB, HH, HE, MV, NI, NW, RP, SL, SN, ST, SH, TH
+## Mexico   MX  None
+## NewZealand   NZ  prov = NTL, AUK, TKI, HKB, WGN, MBH, NSN, CAN, STC, WTL, OTA, STL, CIT
+## UnitedStates     US  state = AL, AK, AS, AZ, AR, CA, CO, CT, DE, DC, FL, GA, GU, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD, MH, MA, MI, FM, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, MP, OH, OK, OR, PW, PA, PR, RI, SC, SD, TN, TX, UT, VT, VA, VI, WA, WV, WI, WY
+
 # Add regions to test here
 regions = Dict(
-    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
-    #"US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"]
-    # "US"=>["WI", "VI", "TX", "NC", "NY", "CA"]
+    # Working Regions
+    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
+    "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"]
+
 )
 
 # Set first and last date in loop
-start_date = Date(1900, 1, 1)
-last_date = Date(2017, 1, 1)
+#~ start_date = Date(1700, 1, 1)
+#~ last_date = Date(2000, 1, 1)
+
+start_date = Date(2000, 1, 1)
+last_date = Date(2004, 1, 1)
+
+println("Start Date:",start_date)
+println("Last Date:",last_date)
+println("Regions:",regions)
 
 function day_names_equal(x, y)
     if isa(x, AbstractString) && isa(y, AbstractString)
@@ -44,7 +61,8 @@ function compareHolidays(country, province)
         y = Holidays.dayName(date, dates)
 
         if !day_names_equal(x, y)
-            println(country, " ", province,"       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+#~             println(country, " ", province,"       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+            println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
 
         # Record holidays that succeeded:
 #~         elseif isa(x, AbstractString) && isa(y, AbstractString)
@@ -60,7 +78,7 @@ function loop_regions()
     for (country, provinces) in regions
         println("Testing ",country)
         for province in provinces
-#~             println("   Country: ",country, ", Province: ",province)
+            println("   Country: ",country, ", Province: ",province)
             compareHolidays(country, province)
         end
     end
