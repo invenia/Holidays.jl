@@ -14,13 +14,13 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 # Add regions to test here
 regions = Dict(
-    # "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
-    # "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"]
-    "US"=>["WI", "VI", "TX", "NC", "NY", "CA"]
+    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
+    #"US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"]
+    # "US"=>["WI", "VI", "TX", "NC", "NY", "CA"]
 )
 
 # Set first and last date in loop
-start_date = Date(2016, 1, 1)
+start_date = Date(1900, 1, 1)
 last_date = Date(2017, 1, 1)
 
 function day_names_equal(x, y)
@@ -39,12 +39,12 @@ function compareHolidays(country, province)
 
     date = start_date
 
-    @time while date < last_date
+    while date < last_date
         x = pyholiday.get(date)
         y = Holidays.dayName(date, dates)
 
         if !day_names_equal(x, y)
-            println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+            println(country, " ", province,"       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
 
         # Record holidays that succeeded:
 #~         elseif isa(x, AbstractString) && isa(y, AbstractString)
@@ -60,7 +60,7 @@ function loop_regions()
     for (country, provinces) in regions
         println("Testing ",country)
         for province in provinces
-            println("   Country: ",country, ", Province: ",province)
+#~             println("   Country: ",country, ", Province: ",province)
             compareHolidays(country, province)
         end
     end
