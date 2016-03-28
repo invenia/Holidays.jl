@@ -14,5 +14,9 @@ def load(country, region):
         dates = holidays.US(state=region)
     elif country == "CA":
         dates = holidays.CA(prov=region)
+    elif country == "MX":
+        dates = holidays.MX()
+    elif country == "NZ":
+        dates = holidays.NZ(prov=region)
     else:
         print "UNKNOWN COUNTRY ",country
