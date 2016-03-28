@@ -1,10 +1,6 @@
-VERSION >= v"0.4-" #&& __precompile__()
+VERSION >= v"0.4-" && __precompile__()
 
 module Holidays
-
-if VERSION < v"0.4-dev"
-    using Dates
-end
 
 # Credits:
 
@@ -15,12 +11,11 @@ end
 
 observed = true
 
-weekend = [Dates.Saturday, Dates.Sunday]
-
 # Shorthand
-dayofweek = Dates.dayofweek
 
-# Functions
+weekend = [Dates.Saturday, Dates.Sunday]
+dayofweek = Dates.dayofweek
+(Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) = (Dates.Monday, Dates.Tuesday, Dates.Wednesday, Dates.Thursday, Dates.Friday, Dates.Saturday, Dates.Sunday)
 
 type HolidayBase
     country::AbstractString
@@ -30,7 +25,7 @@ type HolidayBase
 end
 
 function dayName(date::Date, holidays::HolidayBase)
-    # Expand dict
+    # Exp&& dict
     if !(Dates.year(date) in holidays.years)
         populate_canadian(holidays.dates, holidays.region, Dates.year(date))
         push!(holidays.years, Dates.year(date))
@@ -48,6 +43,31 @@ function nthWeekday(start, weekday, count)
         dayofweek(x) == weekday &&
         Dates.dayofweekofmonth(x) == count
     end
+end
+
+function sub_day(date, weekday, count)
+    if dayofweek(date) == weekday
+        count = count -1
+    end
+
+    for i in range (0, count)
+        date = Dates.toprev(x->Dates.dayofweek(x) == weekday, date)
+    end
+
+    return date
+end
+
+# Returns same date if this is is 'weekday'
+function add_day(date, weekday, count)
+    if dayofweek(date) == weekday
+        count = count -1
+    end
+
+    for i in range (0, count)
+        date = Dates.tonext(x->Dates.dayofweek(x) == weekday, date)
+    end
+
+    return date
 end
 
 # Returns same date if this is is 'weekday'
@@ -93,6 +113,16 @@ function easter(year)
     return Date(year, month, day)
 end
 
+function name(cache, date, day)
+    # If holiday already has a name, prepend the new one with a ,
+    if haskey(cache, date)
+        cache[date] = day * ", " * cache[date]
+    else
+        cache[date] = day
+    end
+
+end
+
 # Adapted from https://en.wikipedia.org/wiki/Computus#Algorithms
 # def IanTaylorEasterJscr(year):
 #     a = year % 19
@@ -132,11 +162,13 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
     # Islander Day
     if region == "PE" && year >= 2010
         # third monday of february
-        days[nthWeekday(Date(year, 2, 1), Dates.Monday, 3) ] = "Islander Day"
+        # days[nthWeekday(Date(year, 2, 1), Dates.Monday, 3) ] = "Islander Day"
+        days[add_day(Date(year, 2), Monday, 3) ] = "Islander Day"
 
     elseif region == "PE" && year == 2009
         # 2nd monday of february
-        days[nthWeekday(Date(year, 2, 1), Dates.Monday, 2) ] = "Islander Day"
+        # days[nthWeekday(Date(year, 2, 1), Dates.Monday, 2) ] = "Islander Day"
+        days[add_day(Date(year, 2), Monday, 2) ] = "Islander Day"
     end
 
     # Family Day / Louis Riel Day (MB)
@@ -186,16 +218,6 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
     elseif region == "QC" && year >= 1953
         date = prev_weekday(Date(year, 5, 24), Dates.Monday)
         days[date] = "National Patriotes Day"
-    end
-
-
-    # Victoria Day / National Patriotes Day (QC)
-    if !(region in ["NB", "NS", "PE", "NL", "QC"]) && year >= 1953
-        days[prev_weekday(Date(year, 5, 24), Dates.Monday)] = "Victoria Day"
-
-    elseif region == "QC" && year >= 1953
-        name = "National Patriotes Day"
-        days[prev_weekday(Date(year, 5, 24), Dates.Monday)] = name
     end
 
     # National Aboriginal Day
@@ -306,6 +328,629 @@ function populate_canadian(days::Dict{Date,AbstractString}, region::AbstractStri
     end
 end
 
+function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
+    # New Year's Day
+    if year >= 1870
+        name = "New Year's Day"
+        date = Date(year, 1, 1)
+        days[date] = name
+
+        if observed
+            if dayofweek(date) == Dates.Sunday
+                days[date + Dates.Day(1)] = name * " (Observed)"
+            elseif dayofweek(date) == Dates.Saturday
+                days[date + Dates.Day(-1)] = name * " (Observed)"
+            end
+        end
+
+        # The next year's observed New Year's Day can be in this year
+        # when it falls on a Friday (Jan 1st is a Saturday)
+        if observed && dayofweek(Date(year, 12, 31)) == Dates.Friday
+            days[Date(year, 12, 31)] = name * " (Observed)"
+        end
+    end
+
+    # Epiphany
+    if region == "PR"
+        days[Date(year, 1, 6)] = "Epiphany"
+    end
+
+    # Three King's Day
+    if region == "VI"
+        days[Date(year, 1, 6)] = "Three King's Day"
+    end
+
+    # Lee Jackson Day
+    name = "Lee Jackson Day"
+    if region == "VA" && year >= 2000
+        # Third monday, then back to previous friday.
+        date = Date(year, 1, 1)
+        date = add_day(date, Dates.Monday, 3)
+        date = sub_day(date, Dates.Friday, 1)
+        days[date] = name
+    elseif region == "VA" && year >= 1983
+        date = Date(year, 1, 1)
+        date = add_day(date, Dates.Monday, 3)
+        days[date] = name
+
+    elseif region == "VA" && year >= 1889
+        days[Date(year, 1, 19)] = name
+    end
+
+    # Inauguration Day
+    if region in ("DC", "LA", "MD", "VA") && year >= 1789
+        name = "Inauguration Day"
+        if (year - 1789) % 4 == 0 && year >= 1937
+            days[Date(year, 1, 20)] = name
+            if dayofweek(Date(year, 1, 20)) == Sunday
+                days[Date(year, 1, 21)] = name * " (Observed)"
+            end
+        elseif (year - 1789) % 4 == 0
+            days[Date(year, 3, 4)] = name
+            if dayofweek(Date(year, 3, 4)) == Sunday
+                days[Date(year, 3, 5)] = name * " (Observed)"
+            end
+        end
+    end
+
+    # Martin Luther King, Jr. Day
+    if year >= 1986
+        name = "Martin Luther King, Jr. Day"
+        if region == "AL"
+            name = "Robert E. Lee/Martin Luther King Birthday"
+        elseif region in ("AS", "MS")
+            name = ("Dr. Martin Luther King Jr. and Robert E. Lee's Birthdays")
+        elseif region in ("AZ", "NH")
+            name = "Dr. Martin Luther King Jr./Civil Rights Day"
+        elseif region == "GA" && year < 2012
+            name = "Robert E. Lee's Birthday"
+        elseif region == "ID" && year >= 2006
+            name = "Martin Luther King, Jr. - Idaho Human Rights Day"
+        end
+
+        if region != "GA" || year < 2012
+            days[add_day(Date(year), Dates.Monday, 3)] = name
+        end
+    end
+
+    # Lincoln's Birthday
+    name = "Lincoln's Birthday"
+    if (region in ("CT", "IL", "IA", "NJ", "NY") && year >= 1971) ||
+            (region == "CA" && year >= 1971 && year <= 2009)
+
+        days[Date(year, 2, 12)] = name
+
+        if observed && dayofweek(Date(year, 2, 12)) == Saturday
+            days[Date(year, 2, 11)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 2, 12)) == Sunday
+            days[Date(year, 2, 13)] = name * " (Observed)"
+        end
+    end
+
+    # Susan B. Anthony Day
+    if (region == "CA" && year >= 2014) ||
+            (region == "FL" && year >= 2011) ||
+            (region == "NY" && year >= 2004) ||
+            (region == "WI" && year >= 1976)
+
+        days[Date(year, 2, 15)] = "Susan B. Anthony Day"
+    end
+
+    # Washington's Birthday
+    name = "Washington's Birthday"
+    if region == "AL"
+        name = "George Washington/Thomas Jefferson Birthday"
+    elseif region == "AS"
+        name = "George Washington's Birthday and Daisy Gatson Bates Day"
+    elseif region in ("PR", "VI")
+        name = "Presidents' Day"
+    end
+
+    if !(region in ("DE", "FL", "GA", "NM", "PR"))
+        if year > 1970
+            # days[Date(year, 2, 1) + rd(weekday=MO(+3))] = name
+            days[add_day(Date(year, 2), Monday, 3)] = name
+        elseif year >= 1879
+            days[Date(year, 2, 22)] = name
+        end
+    elseif region == "GA"
+        if dayofweek(Date(year, 12, 24)) != Wednesday
+            days[Date(year, 12, 24)] = name
+        else
+            days[Date(year, 12, 26)] = name
+        end
+    elseif region in ("PR", "VI")
+        # days[Date(year, 2, 1) + rd(weekday=MO(+3))] = name
+        days[add_day(Date(year, 2), Dates.Monday, 3)] = name
+    end
+
+    # Mardi Gras
+    if region == "LA" && year >= 1857
+        # days[easter(year) + rd(days=-47)] = "Mardi Gras"
+        days[easter(year) + Dates.Day(-47)] = "Mardi Gras"
+    end
+
+    # Guam Discovery Day
+    if region == "GU" && year >= 1970
+        # days[Date(year, 3, 1) + rd(weekday=MO)] = "Guam Discovery Day"
+        days[add_day(Date(year, 3, 1), Dates.Monday, 1)] = "Guam Discovery Day"
+    end
+
+    # Casimir Pulaski Day
+    if region == "IL" && year >= 1978
+        days[add_day(Date(year, 3), Monday, 1)] = "Casimir Pulaski Day"
+    end
+
+    # Texas Independence Day
+    if region == "TX" && year >= 1874
+        days[Date(year, 3, 2)] = "Texas Independence Day"
+    end
+
+    # Town Meeting Day
+    if region == "VT" && year >= 1800
+        # days[Date(year, 3, 1) + rd(weekday=TU)] = "Town Meeting Day"
+        days[add_day(Date(year, 3), Dates.Tuesday, 1)] = "Town Meeting Day"
+    end
+
+    # Evacuation Day
+    if region == "MA" && year >= 1901
+        name = "Evacuation Day"
+        days[Date(year, 3, 17)] = name
+        if dayofweek(Date(year, 3, 17)) in weekend
+            # days[Date(year, 3, 17) + rd(weekday=MO)] = name * " (Observed)"
+            days[add_day(Date(year, 3, 17), Monday, 1)] = name * " (Observed)"
+        end
+    end
+
+    # Emancipation Day
+    if region == "PR"
+        days[Date(year, 3, 22)] = "Emancipation Day"
+        if observed && dayofweek(Date(year, 3, 22)) == Dates.Sunday
+            days[Date(year, 3, 23)] = "Emancipation Day (Observed)"
+        end
+    end
+
+    # Prince Jonah Kuhio Kalanianaole Day
+    if region == "HI" && year >= 1949
+        name = "Prince Jonah Kuhio Kalanianaole Day"
+        days[Date(year, 3, 26)] = name
+        if observed && dayofweek(Date(year, 3, 26)) == Dates.Saturday
+            days[Date(year, 3, 25)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 3, 26)) == Dates.Sunday
+            days[Date(year, 3, 27)] = name * " (Observed)"
+        end
+    end
+
+    # Steward's Day
+    name = "Steward's Day"
+    if region == "AK" && year >= 1955
+        # days[Date(year, 4, 1) + rd(days=-1, weekday=MO(-1))] = name
+        date = Date(year, 4, 1) + Dates.Day(-1)
+        days[sub_day(date, Monday, 1)] = name
+    elseif region == "AK" && year >= 1918
+        days[Date(year, 3, 30)] = name
+    end
+
+    # César Chávez Day
+    name = "César Chávez Day"
+    if region == "CA" && year >= 1995
+        days[Date(year, 3, 31)] = name
+        if observed && dayofweek(Date(year, 3, 31)) == Dates.Sunday
+            days[Date(year, 4, 1)] = name * " (Observed)"
+        end
+    elseif region == "TX" && year >= 2000
+        days[Date(year, 3, 31)] = name
+    end
+
+    # Transfer Day
+    if region == "VI"
+        days[Date(year, 3, 31)] = "Transfer Day"
+    end
+
+    # Emancipation Day
+    if region == "DC" && year >= 2005
+        name = "Emancipation Day"
+        days[Date(year, 4, 16)] = name
+        if observed && dayofweek(Date(year, 4, 16)) == Dates.Saturday
+            days[Date(year, 4, 15)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 4, 16)) == Dates.Sunday
+            days[Date(year, 4, 17)] = name * " (Observed)"
+        end
+    end
+
+    # Patriots' Day
+    if region in ("ME", "MA") && year >= 1969
+        # days[Date(year, 4, 1) + rd(weekday=MO(+3))] = "Patriots' Day"
+        days[add_day(Date(year, 4, 1), Monday, 3)] = "Patriots' Day"
+    elseif region in ("ME", "MA") && year >= 1894
+        days[Date(year, 4, 19)] = "Patriots' Day"
+    end
+
+    # Holy Thursday
+    if region == "VI"
+        # days[easter(year) + rd(weekday=TH(-1))] = "Holy Thursday"
+        days[sub_day(easter(year), Thursday, 1)] = "Holy Thursday"
+    end
+
+    # Good Friday
+    if region in ("CT", "DE", "GU", "IN", "KY", "LA",
+                  "NJ", "NC", "PR", "TN", "TX", "VI")
+        # days[easter(year) + rd(weekday=FR(-1))] = "Good Friday"
+        days[sub_day(easter(year), Friday, 1)] = "Good Friday"
+    end
+
+    # Easter Monday
+    if region == "VI"
+        # days[easter(year) + rd(weekday=MO)] = "Easter Monday"
+        days[add_day(easter(year), Monday, 1)] = "Easter Monday"
+    end
+
+    # Confederate Memorial Day
+    name = "Confederate Memorial Day"
+    if region in ("AL", "GA", "MS", "SC") && year >= 1866
+        # days[Date(year, 4, 1) + rd(weekday=MO(+4))] = name
+        days[add_day(Date(year, 4), Monday, 4)] = name
+    elseif region == "TX" && year >= 1931
+        days[Date(year, 1, 19)] = name
+    end
+
+    # San Jacinto Day
+    if region == "TX" && year >= 1875
+        days[Date(year, 4, 21)] = "San Jacinto Day"
+    end
+
+    # Arbor Day
+    if region == "NE" && year >= 1989
+        # days[Date(year, 4, 30) + rd(weekday=FR(-1))] = "Arbor Day"
+        days[sub_day(Date(year, 4, 30), Friday, 1)] = "Arbor Day"
+    elseif region == "NE" && year >= 1875
+        days[Date(year, 4, 22)] = "Arbor Day"
+    end
+
+    # Primary Election Day
+    if region == "IN" && ((year >= 2006 && year % 2 == 0) ||
+                           year >= 2015)
+        # dt = Date(year, 5, 1) + rd(weekday=MO)
+        dt = add_day(Date(year, 5), Monday, 1)
+        days[dt + Dates.Day(1)] = "Primary Election Day"
+    end
+
+    # Truman Day
+    if region == "MO" && year >= 1949
+        name = "Truman Day"
+        days[Date(year, 5, 8)] = name
+        if observed && dayofweek(Date(year, 5, 8)) == Dates.Saturday
+            days[Date(year, 5, 7)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 5, 8)) == Dates.Sunday
+            days[Date(year, 5, 10)] = name * " (Observed)"
+        end
+    end
+
+    # Memorial Day
+    if year > 1970
+        # days[Date(year, 5, 31) + rd(weekday=MO(-1))] = "Memorial Day"
+        days[sub_day(Date(year, 5, 31), Monday, 1)] = "Memorial Day"
+    elseif year >= 1888
+        days[Date(year, 5, 30)] = "Memorial Day"
+    end
+
+    # Jefferson Davis Birthday
+    name = "Jefferson Davis Birthday"
+    if region == "AL" && year >= 1890
+        # days[Date(year, 6, 1) + rd(weekday=MO)] = name
+        days[add_day(Date(year, 6), Monday, 1)] = name
+    end
+
+    # Kamehameha Day
+    if region == "HI" && year >= 1872
+        days[Date(year, 6, 11)] = "Kamehameha Day"
+        if observed && year >= 2011
+            if dayofweek(Date(year, 6, 11)) == Dates.Saturday
+                days[Date(year, 6, 10)] = "Kamehameha Day (Observed)"
+            elseif dayofweek(Date(year, 6, 11)) == Dates.Sunday
+                days[Date(year, 6, 12)] = "Kamehameha Day (Observed)"
+            end
+        end
+    end
+
+    # Emancipation Day In Texas
+    if region == "TX" && year >= 1980
+        days[Date(year, 6, 19)] = "Emancipation Day In Texas"
+    end
+
+    # West Virginia Day
+    name = "West Virginia Day"
+    if region == "WV" && year >= 1927
+        days[Date(year, 6, 20)] = name
+        if observed && dayofweek(Date(year, 6, 20)) == Dates.Saturday
+            days[Date(year, 6, 19)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 6, 20)) == Dates.Sunday
+            days[Date(year, 6, 21)] = name * " (Observed)"
+        end
+    end
+
+    # Emancipation Day in US Virgin Isl&&s
+    if region == "VI"
+        days[Date(year, 7, 3)] = "Emancipation Day"
+    end
+
+    # Independence Day
+    if year > 1870
+        name = "Independence Day"
+        days[Date(year, 7, 4)] = name
+        if observed && dayofweek(Date(year, 7, 4)) == Dates.Saturday
+            # days[Date(year, 7, 4) + rd(days=-1)] = name * " (Observed)"
+            days[Date(year, 7, 3)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 7, 4)) == Dates.Sunday
+            # days[Date(year, 7, 4) + rd(days=+1)] = name * " (Observed)"
+            days[Date(year, 7, 5)] = name * " (Observed)"
+        end
+    end
+
+    # Liberation Day (Guam)
+    if region == "GU" && year >= 1945
+        days[Date(year, 7, 21)] = "Liberation Day (Guam)"
+    end
+
+    # Pioneer Day
+    if region == "UT" && year >= 1849
+        name = "Pioneer Day"
+        days[Date(year, 7, 24)] = name
+        if observed && dayofweek(Date(year, 7, 24)) == Dates.Saturday
+            # days[Date(year, 7, 24) + rd(days=-1)] = name * " (Observed)"
+            days[Date(year, 7, 23)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 7, 24)) == Dates.Sunday
+            # days[Date(year, 7, 24) + rd(days=+1)] = name * " (Observed)"
+            days[Date(year, 7, 25)] = name * " (Observed)"
+        end
+    end
+
+    # Constitution Day
+    if region == "PR"
+        days[Date(year, 7, 25)] = "Constitution Day"
+        if observed && dayofweek(Date(year, 7, 25)) == Dates.Sunday
+            days[Date(year, 7, 26)] = "Constitution Day (Observed)"
+        end
+    end
+
+    # Victory Day
+    if region == "RI" && year >= 1948
+        # days[Date(year, 8, 1) + rd(weekday=MO(+2))] = "Victory Day"
+        days[add_day(Date(year, 8), Monday, 2)] = "Victory Day"
+    end
+
+    # Statehood Day (Hawaii)
+    if region == "HI" && year >= 1959
+        # days[Date(year, 8, 1) + rd(weekday=FR(+3))] = "Statehood Day"
+        days[add_day(Date(year, 8), Friday, 3)] = "Statehood Day"
+    end
+
+    # Bennington Battle Day
+    if region == "VT" && year >= 1778
+        name = "Bennington Battle Day"
+        days[Date(year, 8, 16)] = name
+        if observed && dayofweek(Date(year, 8, 16)) == Dates.Saturday
+            days[Date(year, 8, 15)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 8, 16)) == Dates.Sunday
+            days[Date(year, 8, 17)] = name * " (Observed)"
+        end
+    end
+
+    # Lyndon Baines Johnson Day
+    if region == "TX" && year >= 1973
+        days[Date(year, 8, 27)] = "Lyndon Baines Johnson Day"
+    end
+
+    # Labor Day
+    if year >= 1894
+        # days[Date(year, 9, 1) + rd(weekday=MO)] = "Labor Day"
+        days[add_day(Date(year, 9, 1), Monday, 1)] = "Labor Day"
+    end
+
+    # Columbus Day
+    if ! (region in ("AK", "DE", "FL", "HI", "NV"))
+        if region == "SD"
+            name = "Native American Day"
+        elseif region == "VI"
+            name = "Columbus Day and Puerto Rico Friendship Day"
+        else
+            name = "Columbus Day"
+        end
+
+        if year >= 1970
+            # days[Date(year, 10, 1) + rd(weekday=MO(+2))] = name
+            days[add_day(Date(year, 10), Monday, 2)] = name
+        elseif year >= 1937
+            days[Date(year, 10, 12)] = name
+        end
+    end
+
+    # Alaska Day
+    if region == "AK" && year >= 1867
+        days[Date(year, 10, 18)] = "Alaska Day"
+        if observed && dayofweek(Date(year, 10, 18)) == Dates.Saturday
+            days[Date(year, 10, 17)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 10, 18)) == Dates.Sunday
+            days[Date(year, 10, 19)] = name * " (Observed)"
+        end
+    end
+
+    # Nevada Day
+    if region == "NV" && year >= 1933
+        date = Date(year, 10, 31)
+        if year >= 2000
+            # dt += rd(weekday=FR(-1))
+            date = sub_day(date, Friday, 1)
+        end
+
+        days[date] = "Nevada Day"
+        if observed && dayofweek(date) == Saturday
+            days[date + Dates.Day(-1)] = "Nevada Day (Observed)"
+        elseif observed && dayofweek(date) == Sunday
+            days[date + Dates.Day(1)] = "Nevada Day (Observed)"
+        end
+    end
+
+    # Liberty Day
+    if region == "VI"
+        days[Date(year, 11, 1)] = "Liberty Day"
+    end
+
+    # Election Day
+    if (region in ("DE", "HI", "IL", "IN", "LA",
+                        "MT", "NH", "NJ", "NY", "WV") &&
+                year >= 2008 && year % 2 == 0) ||
+            (region in ("IN", "NY") && year >= 2015)
+
+        # dt = Date(year, 11, 1) + rd(weekday=MO)
+        dt = add_day(Date(year, 11), Monday, 1)
+        days[dt + Dates.Day(1)] = "Election Day"
+    end
+
+    # All Souls' Day
+    if region == "GU"
+        days[Date(year, 11, 2)] = "All Souls' Day"
+    end
+
+    # Veterans Day
+    if year > 1953
+        name = "Veterans Day"
+    else
+        name = "Armistice Day"
+    end
+
+    if 1978 > year > 1970
+        # days[Date(year, 10, 1) + rd(weekday=MO(+4))] = name
+        days[add_day(Date(year, 10), Monday, 4)] = name
+    elseif year >= 1938
+        days[Date(year, 11, 11)] = name
+
+        if observed && dayofweek(Date(year, 11, 11)) == Dates.Saturday
+            days[Date(year, 11, 10)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 11, 11)) == Dates.Sunday
+            days[Date(year, 11, 12)] = name * " (Observed)"
+        end
+    end
+
+    # Discovery Day
+    if region == "PR"
+        days[Date(year, 11, 19)] = "Discovery Day"
+        if observed && dayofweek(Date(year, 11, 19)) == Dates.Sunday
+            days[Date(year, 11, 20)] = "Discovery Day (Observed)"
+        end
+    end
+
+    # Thanksgiving
+    if year > 1870
+        # days[Date(year, 11, 1) + rd(weekday=TH(+4))] = "Thanksgiving"
+        days[add_day(Date(year, 11), Thursday, 4)] = "Thanksgiving"
+    end
+
+    # Day After Thanksgiving
+    # Friday After Thanksgiving
+    # Lincoln's Birthday
+    # American Indian Heritage Day
+    # Family Day
+    # New Mexico Presidents' Day
+    if (region in ("DE", "FL", "NH", "NC", "OK", "TX", "WV") && year >= 1975) ||
+            (region == "IN" && year >= 2010) ||
+            (region == "MD" && year >= 2008) ||
+            region in ("NV", "NM")
+
+        if region in ("DE", "NH", "NC", "OK", "WV")
+            name = "Day After Thanksgiving"
+        elseif region in ("FL", "TX")
+            name = "Friday After Thanksgiving"
+        elseif region == "IN"
+            name = "Lincoln's Birthday"
+        elseif region == "MD" && year >= 2008
+            name = "American Indian Heritage Day"
+        elseif region == "NV"
+            name = "Family Day"
+        elseif region == "NM"
+            name = "Presidents' Day"
+        end
+
+        # dt = Date(year, 11, 1) + rd(weekday=TH(+4))
+        dt = add_day(Date(year, 11, 1), Thursday, 4)
+        # days[dt + rd(days=+1)] = name
+        days[dt + Dates.Day(1)] = name
+    end
+
+    # Robert E. Lee's Birthday
+    if region == "GA" && year >= 2012
+        name = "Robert E. Lee's Birthday"
+        # days[Date(year, 11, 29) + rd(weekday=FR(-1))] = name
+        days[sub_day( Date(year, 11, 29), Friday, 1)] = name
+    end
+
+    # Lady of Camarin Day
+    if region == "GU"
+        days[Date(year, 12, 8)] = "Lady of Camarin Day"
+    end
+
+    # Christmas Eve
+    if region == "AS" ||
+            (region in ("KS", "MI", "NC") && year >= 2013) ||
+            (region == "TX" && year >= 1981) ||
+            (region == "WI" && year >= 2012)
+
+        name = "Christmas Eve"
+        days[Date(year, 12, 24)] = name
+        name = name * " (Observed)"
+        # If on Friday, observed on Thursday
+        if observed && dayofweek(Date(year, 12, 24)) == Dates.Friday
+            days[Date(year, 12, 23)] = name
+        # If on Saturday or Sunday, observed on Friday
+        elseif observed && dayofweek(Date(year, 12, 24)) in weekend
+            # days[Date(year, 12, 24) + rd(weekday=FR(-1))] = name
+            days[sub_day(Date(year, 12, 24), Friday, 1)] = name
+        end
+    end
+
+    # Christmas Day
+    if year > 1870
+        name = "Christmas Day"
+        days[Date(year, 12, 25)] = "Christmas Day"
+        if observed && dayofweek(Date(year, 12, 25)) == Dates.Saturday
+            days[Date(year, 12, 24)] = name * " (Observed)"
+        elseif observed && dayofweek(Date(year, 12, 25)) == Dates.Sunday
+            days[Date(year, 12, 26)] = name * " (Observed)"
+        end
+    end
+
+    # Day After Christmas
+    if region == "NC" && year >= 2013
+        name = "Day After Christmas"
+        days[Date(year, 12, 26)] = name
+        name = name * " (Observed)"
+        # If on Saturday or Sunday, observed on Monday
+        if observed && dayofweek(Date(year, 12, 26)) in weekend
+            # days[Date(year, 12, 26) + rd(weekday=MO)] = name
+            days[add_day(Date(year, 12, 26), Monday, 1)] = name
+
+        # If on Monday, observed on Tuesday
+        elseif observed && dayofweek(Date(year, 12, 26)) == Dates.Monday
+            days[Date(year, 12, 27)] = name
+        end
+    elseif region == "TX" && year >= 1981
+        days[Date(year, 12, 26)] = "Day After Christmas"
+    elseif region == "VI"
+        days[Date(year, 12, 26)] = "Christmas Second Day"
+    end
+
+    # New Year's Eve
+    if (region in ("KY", "MI") && year >= 2013) ||
+            (region == "WI" && year >= 2012)
+
+        name = "New Year's Eve"
+        days[Date(year, 12, 31)] = name
+        if observed && dayofweek(Date(year, 12, 31)) == Dates.Saturday
+            days[Date(year, 12, 30)] = name * " (Observed)"
+        end
+    end
+end
+
 function Canada( ; region="", years::Array{Int}=Int[])
     years = Set(years)
 
@@ -317,6 +962,25 @@ function Canada( ; region="", years::Array{Int}=Int[])
 
     x = HolidayBase("CA", region, years, holidays)
     x
+end
+
+function Cache(; country="CA", region="MB", years::Array{Int}=Int[])
+    years = Set(years)
+
+    holidays = Dict{Date,AbstractString}()
+
+    populators =  Dict{AbstractString, Function}(
+        "US"=>populate_us,
+        "CA"=>populate_canadian
+    )
+
+    populate = populators[country]
+
+    for year in years
+        populate(holidays, region, year)
+    end
+
+    HolidayBase(country, region, years, holidays)
 end
 
 end

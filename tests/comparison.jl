@@ -1,6 +1,10 @@
 using PyCall
 using Holidays
 
+#Requirements:
+# Pkg.add("DataStructures")
+#
+
 #Force load of python module in current directory
 unshift!(PyVector(pyimport("sys")["path"]), "")
 
@@ -10,13 +14,14 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 # Add regions to test here
 regions = Dict(
-    #~ "CA"=>["MB", "NL", "QC", "NU"]
-    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
+    # "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
+    # "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"]
+    "US"=>["WI", "VI", "TX", "NC", "NY", "CA"]
 )
 
 # Set first and last date in loop
-start_date = Date(1700, 1, 1)
-last_date = Date(2030, 1, 1)
+start_date = Date(2016, 1, 1)
+last_date = Date(2017, 1, 1)
 
 function day_names_equal(x, y)
     if isa(x, AbstractString) && isa(y, AbstractString)
@@ -29,7 +34,7 @@ function day_names_equal(x, y)
 end
 
 function compareHolidays(country, province)
-    dates = Holidays.Canada(region=province, years=2016)
+    dates = Holidays.Cache(country=country, region=province, years=[2016])
     pyholiday.load(country, province)
 
     date = start_date
@@ -38,13 +43,13 @@ function compareHolidays(country, province)
         x = pyholiday.get(date)
         y = Holidays.dayName(date, dates)
 
-        # Record holidays that failed:
         if !day_names_equal(x, y)
-            println("Failure on ",date, " - Python: ",x,", Julia: ",y)
+            println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
 
-        # Record holidays that matched:
-        #elseif isa(x, AbstractString) && isa(y, AbstractString)
-        #    println("Success on ",date, " - Python: ",x,", Julia: ",y)
+        # Record holidays that succeeded:
+#~         elseif isa(x, AbstractString) && isa(y, AbstractString)
+#~             println("       Success on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+
         end
 
         date = date + Dates.Day(1)
@@ -53,14 +58,13 @@ end
 
 function loop_regions()
     for (country, provinces) in regions
-        println("Testing country ",country)
+        println("Testing ",country)
         for province in provinces
-            println("Country: ",country, ", Province: ",province)
+            println("   Country: ",country, ", Province: ",province)
             compareHolidays(country, province)
         end
     end
 end
-
 
 function test_easter()
     # Hard coded known correct dates for easter - Will be compared to my calculated version.
@@ -130,7 +134,7 @@ function test_easter()
     end
 end
 
-loop_regions()
+@time loop_regions()
 # test_easter()
 
 

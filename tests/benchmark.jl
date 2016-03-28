@@ -2,7 +2,6 @@
 
 using PyCall
 using Holidays
-using ProfileView
 
 #Force load of python module in current directory
 unshift!(PyVector(pyimport("sys")["path"]), "")
@@ -10,14 +9,14 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 @pyimport pyholiday
 
 start_date = Date(2000, 1, 1)
-last_date = Date(2001, 1, 1)
+#~ last_date = Date(2001, 1, 1)
+last_date = Date(2005, 1, 1)
+
+regions = Dict(
+    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
+)
 
 function julia_test()
-    # Add regions to test here
-    regions = Dict(
-        "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
-    )
-
     println("\n\nTesting julia version")
     for (country, provinces) in regions
         println("Testing country ",country)
@@ -36,11 +35,6 @@ function julia_test()
 end
 
 function python_test()
-    # Add regions to test here
-    regions = Dict(
-        "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
-    )
-
     println("Testing python version")
     for (country, provinces) in regions
         println("Testing country ",country)
@@ -59,21 +53,12 @@ function python_test()
 end
 
 function compare_versions()
-    println("Initial")
-    # Constants
-    julia_test()
-
-    println("Second")
-    Profile.init(delay=0.0001)
-    Profile.clear()
-    @profile @time julia_test()
-
-    println("Viewing")
-    ProfileView.view()
-    #~ python_test()
+    @time julia_test()
+    @time python_test()
 end
 
 compare_versions()
-#~ compare_dicts()
+
+println("Done")
 
 

@@ -16,4 +16,3 @@ def load(country, region):
         dates = holidays.CA(prov=region)
     else:
         print "UNKNOWN COUNTRY ",country
-
