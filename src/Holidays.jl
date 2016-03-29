@@ -433,7 +433,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     if !(region in ("DE", "FL", "GA", "NM", "PR"))
         if year > 1970
-            # title(days, Date(year, 2, 1) + rd(weekday=MO(+3)), name)
             title(days, add_day(Date(year, 2), Monday, 3), name)
         elseif year >= 1879
             title(days, Date(year, 2, 22), name)
@@ -445,19 +444,16 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
             title(days, Date(year, 12, 26), name)
         end
     elseif region in ("PR", "VI")
-        # title(days, Date(year, 2, 1) + rd(weekday=MO(+3)), name)
         title(days, add_day(Date(year, 2), Dates.Monday, 3), name)
     end
 
     # Mardi Gras
     if region == "LA" && year >= 1857
-        # title(days, easter(year) + rd(days=-47), "Mardi Gras")
         title(days, easter(year) + Dates.Day(-47), "Mardi Gras")
     end
 
     # Guam Discovery Day
     if region == "GU" && year >= 1970
-        # title(days, Date(year, 3, 1) + rd(weekday=MO), "Guam Discovery Day")
         title(days, add_day(Date(year, 3, 1), Dates.Monday, 1), "Guam Discovery Day")
     end
 
@@ -473,7 +469,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     # Town Meeting Day
     if region == "VT" && year >= 1800
-        # title(days, Date(year, 3, 1) + rd(weekday=TU), "Town Meeting Day")
         title(days, add_day(Date(year, 3), Dates.Tuesday, 1), "Town Meeting Day")
     end
 
@@ -482,7 +477,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
         name = "Evacuation Day"
         title(days, Date(year, 3, 17), name)
         if dayofweek(Date(year, 3, 17)) in weekend
-            # title(days, Date(year, 3, 17) + rd(weekday=MO), name * " (Observed)")
             title(days, add_day(Date(year, 3, 17), Monday, 1), name * " (Observed)")
         end
     end
@@ -509,7 +503,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
     # Steward's Day
     name = "Steward's Day"
     if region == "AK" && year >= 1955
-        # title(days, Date(year, 4, 1) + rd(days=-1, weekday=MO(-1)), name)
         date = Date(year, 4, 1) + Dates.Day(-1)
         title(days, sub_day(date, Monday, 1), name)
     elseif region == "AK" && year >= 1918
@@ -545,7 +538,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     # Patriots' Day
     if region in ("ME", "MA") && year >= 1969
-        # title(days, Date(year, 4, 1) + rd(weekday=MO(+3)), "Patriots' Day")
         title(days, add_day(Date(year, 4, 1), Monday, 3), "Patriots' Day")
     elseif region in ("ME", "MA") && year >= 1894
         title(days, Date(year, 4, 19), "Patriots' Day")
@@ -553,27 +545,24 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     # Holy Thursday
     if region == "VI"
-        # title(days, easter(year) + rd(weekday=TH(-1)), "Holy Thursday")
         title(days, sub_day(easter(year), Thursday, 1), "Holy Thursday")
     end
 
     # Good Friday
     if region in ("CT", "DE", "GU", "IN", "KY", "LA",
                   "NJ", "NC", "PR", "TN", "TX", "VI")
-        # title(days, easter(year) + rd(weekday=FR(-1)), "Good Friday")
+
         title(days, sub_day(easter(year), Friday, 1), "Good Friday")
     end
 
     # Easter Monday
     if region == "VI"
-        # title(days, easter(year) + rd(weekday=MO), "Easter Monday")
         title(days, add_day(easter(year), Monday, 1), "Easter Monday")
     end
 
     # Confederate Memorial Day
     name = "Confederate Memorial Day"
     if region in ("AL", "GA", "MS", "SC") && year >= 1866
-        # title(days, Date(year, 4, 1) + rd(weekday=MO(+4)), name)
         title(days, add_day(Date(year, 4), Monday, 4), name)
     elseif region == "TX" && year >= 1931
         title(days, Date(year, 1, 19), name)
@@ -586,7 +575,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     # Arbor Day
     if region == "NE" && year >= 1989
-        # title(days, Date(year, 4, 30) + rd(weekday=FR(-1)), "Arbor Day")
         title(days, sub_day(Date(year, 4, 30), Friday, 1), "Arbor Day")
     elseif region == "NE" && year >= 1875
         title(days, Date(year, 4, 22), "Arbor Day")
@@ -595,7 +583,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
     # Primary Election Day
     if region == "IN" && ((year >= 2006 && year % 2 == 0) ||
                            year >= 2015)
-        # date = Date(year, 5, 1) + rd(weekday=MO)
         date = add_day(Date(year, 5), Monday, 1)
         title(days, date + Dates.Day(1), "Primary Election Day")
     end
@@ -613,7 +600,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     # Memorial Day
     if year > 1970
-        # title(days, Date(year, 5, 31) + rd(weekday=MO(-1)), "Memorial Day")
         title(days, sub_day(Date(year, 5, 31), Monday, 1), "Memorial Day")
     elseif year >= 1888
         title(days, Date(year, 5, 30), "Memorial Day")
@@ -622,7 +608,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
     # Jefferson Davis Birthday
     name = "Jefferson Davis Birthday"
     if region == "AL" && year >= 1890
-        # title(days, Date(year, 6, 1) + rd(weekday=MO), name)
         title(days, add_day(Date(year, 6), Monday, 1), name)
     end
 
@@ -664,10 +649,8 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
         name = "Independence Day"
         title(days, Date(year, 7, 4), name)
         if observed && dayofweek(Date(year, 7, 4)) == Dates.Saturday
-            # title(days, Date(year, 7, 4) + rd(days=-1), name * " (Observed)")
             title(days, Date(year, 7, 3), name * " (Observed)")
         elseif observed && dayofweek(Date(year, 7, 4)) == Dates.Sunday
-            # title(days, Date(year, 7, 4) + rd(days=+1), name * " (Observed)")
             title(days, Date(year, 7, 5), name * " (Observed)")
         end
     end
@@ -682,10 +665,8 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
         name = "Pioneer Day"
         title(days, Date(year, 7, 24), name)
         if observed && dayofweek(Date(year, 7, 24)) == Dates.Saturday
-            # title(days, Date(year, 7, 24) + rd(days=-1), name * " (Observed)")
             title(days, Date(year, 7, 23), name * " (Observed)")
         elseif observed && dayofweek(Date(year, 7, 24)) == Dates.Sunday
-            # title(days, Date(year, 7, 24) + rd(days=+1), name * " (Observed)")
             title(days, Date(year, 7, 25), name * " (Observed)")
         end
     end
@@ -700,13 +681,11 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     # Victory Day
     if region == "RI" && year >= 1948
-        # title(days, Date(year, 8, 1) + rd(weekday=MO(+2)), "Victory Day")
         title(days, add_day(Date(year, 8), Monday, 2), "Victory Day")
     end
 
     # Statehood Day (Hawaii)
     if region == "HI" && year >= 1959
-        # title(days, Date(year, 8, 1) + rd(weekday=FR(+3)), "Statehood Day")
         title(days, add_day(Date(year, 8), Friday, 3), "Statehood Day")
     end
 
@@ -728,7 +707,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
 
     # Labor Day
     if year >= 1894
-        # title(days, Date(year, 9, 1) + rd(weekday=MO), "Labor Day")
         title(days, add_day(Date(year, 9, 1), Monday, 1), "Labor Day")
     end
 
@@ -743,7 +721,6 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ye
         end
 
         if year >= 1970
-            # title(days, Date(year, 10, 1) + rd(weekday=MO(+2)), name)
             title(days, add_day(Date(year, 10), Monday, 2), name)
         elseif year >= 1937
             title(days, Date(year, 10, 12), name)
@@ -1288,134 +1265,148 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ye
     end
     title(days, add_day(easter(year), Monday, 1), "Easter Monday")
 
-#~     # Anzac Day
-#~     if year > 1920
-#~         name = "Anzac Day"
-#~         apr25 = Date(year, 4, 25)
-#~         title(days, apr25, name)
-#~         if observed
-#~             if dayofweek(apr25) == SATURDAY && region in ("WA", "NT")
-#~                 title(days, apr25 + rd(weekday=MO), name * " (Observed)")
-#~             elseif dayofweek((apr25) == SUNDAY and
-#~                   region in ("ACT", "QLD", "SA", "WA", "NT"))
-#~                 title(days, apr25 + rd(weekday=MO), name * " (Observed)")
+    # Anzac Day
+    if year > 1920
+        name = "Anzac Day"
+        apr25 = Date(year, 4, 25)
+        title(days, apr25, name)
+        if observed
+            if dayofweek(apr25) == Saturday && region in ("WA", "NT")
+                title(days, add_day(apr25, Monday, 1), name * " (Observed)")
+            elseif dayofweek(apr25) == Sunday && region in ("ACT", "QLD", "SA", "WA", "NT")
+                title(days, add_day(apr25, Monday, 1), name * " (Observed)")
+            end
+        end
+    end
 
-#~     # Western Australia Day
-#~     if region == "WA" && year > 1832
-#~         if year >= 2015
-#~             name = "Western Australia Day"
-#~         else
-#~             name = "Foundation Day"
-#~         title(days, Date(year, 6, 1) + rd(weekday=MO(+1)), name)
+    # Western Australia Day
+    if region == "WA" && year > 1832
+        name = year >= 2015? "Western Australia Day" : "Foundation Day"
+        title(days, add_day(Date(year, 6, 1), Monday, 1), name)
+    end
 
-#~     # Sovereign's Birthday
-#~     if year >= 1952
-#~         name = "Queen's Birthday"
-#~     elseif year > 1901
-#~         name = "King's Birthday"
-#~     if year >= 1936
-#~         name = "Queen's Birthday"
-#~         if region == "QLD"
-#~             if year == 2012
-#~                 title(days, Date(year, 10, 1), name)
-#~                 title(days, Date(year, 6, 11), "Queen's Diamond Jubilee")
-#~             else
-#~                 dt = Date(year, 6, 1) + rd(weekday=MO(+2))
-#~                 title(days, dt, name)
-#~         elseif region == "WA"
-#~             # by proclamation ?!?!
-#~             title(days, Date(year, 10, 1) + rd(weekday=MO(-1)), name)
-#~         else
-#~             dt = Date(year, 6, 1) + rd(weekday=MO(+2))
-#~             title(days, dt, name)
-#~     elseif year > 1911
-#~         title(days, Date(year, 6, 3), name   ) George V
-#~     elseif year > 1901
-#~         title(days, Date(year, 11, 9), name  ) Edward VII
+    # Sovereign's Birthday
+    if year >= 1952
+        name = "Queen's Birthday"
+    elseif year > 1901
+        name = "King's Birthday"
+    end
+    if year >= 1936
+        name = "Queen's Birthday"
+        if region == "QLD"
+            if year == 2012
+                title(days, Date(year, 10, 1), name)
+                title(days, Date(year, 6, 11), "Queen's Diamond Jubilee")
+            else
+                title(days, add_day(Date(year, 6, 1), Monday, 2), name)
+            end
+        elseif region == "WA"
+            # by proclamation ?!?!
+            title(days, sub_day(Date(year, 10, 1), Monday, 1), name)
+        else
+            title(days, add_day(Date(year, 6, 1), Monday, 2), name)
+        end
+    elseif year > 1911
+        title(days, Date(year, 6, 3), name) # George V
+    elseif year > 1901
+        title(days, Date(year, 11, 9), name) # Edward VII
+    end
 
-#~     # Picnic Day
-#~     if region == "NT"
-#~         name = "Picnic Day"
-#~         title(days, Date(year, 8, 1) + rd(weekday=MO), name)
+    # Picnic Day
+    if region == "NT"
+        name = "Picnic Day"
+        title(days, add_day(Date(year, 8, 1), Monday, 1), name)
+    end
 
-#~     # Labour Day
-#~     name = "Labour Day"
-#~     if region in ("NSW", "ACT", "SA")
-#~         title(days, Date(year, 10, 1) + rd(weekday=MO), name)
-#~     elseif region == "WA"
-#~         title(days, Date(year, 3, 1) + rd(weekday=MO), name)
-#~     elseif region == "VIC"
-#~         title(days, Date(year, 3, 1) + rd(weekday=MO(+2)), name)
-#~     elseif region == "QLD"
-#~         if 2013 <= year <= 2015
-#~             title(days, Date(year, 10, 1) + rd(weekday=MO), name)
-#~         else
-#~             title(days, Date(year, 5, 1) + rd(weekday=MO), name)
-#~     elseif region == "NT"
-#~         name = "May Day"
-#~         title(days, Date(year, 5, 1) + rd(weekday=MO), name)
-#~     elseif region == "TAS"
-#~         name = "Eight Hours Day"
-#~         title(days, Date(year, 3, 1) + rd(weekday=MO(+2)), name)
+    # Labour Day
+    name = "Labour Day"
+    if region in ("NSW", "ACT", "SA")
+        title(days, add_day(Date(year, 10, 1), Monday, 1), name)
+    elseif region == "WA"
+        title(days, add_day(Date(year, 3, 1), Monday, 1), name)
+    elseif region == "VIC"
+        title(days, add_day(Date(year, 3, 1), Monday, 2), name)
+    elseif region == "QLD"
+        if 2013 <= year <= 2015
+            title(days, add_day(Date(year, 10, 1), Monday, 1), name)
+        else
+            title(days, add_day(Date(year, 5, 1), Monday, 1), name)
+        end
+    elseif region == "NT"
+        name = "May Day"
+        title(days, add_day(Date(year, 5, 1), Monday, 1), name)
+    elseif region == "TAS"
+        name = "Eight Hours Day"
+        title(days, add_day(Date(year, 3, 1), Monday, 2), name)
+    end
 
-#~     # Family & Community Day
-#~     if region == "ACT"
-#~         name = "Family & Community Day"
-#~         if 2007 <= year <= 2009
-#~             title(days, Date(year, 11, 1) + rd(weekday=TU), name)
-#~         elseif year == 2010
-#~             # first Monday of the September/October school holidays
-#~             # moved to the second Monday if this falls on Labour day
-#~             # TODO need a formula for the ACT school holidays then
-#~             # http://www.cmd.act.gov.au/communication/holidays
-#~             title(days, Date(year, 9, 26), name)
-#~         elseif year == 2011
-#~             title(days, Date(year, 10, 10), name)
-#~         elseif year == 2012
-#~             title(days, Date(year, 10, 8), name)
-#~         elseif year == 2013
-#~             title(days, Date(year, 9, 30), name)
-#~         elseif year == 2014
-#~             title(days, Date(year, 9, 29), name)
-#~         elseif year == 2015
-#~             title(days, Date(year, 9, 28), name)
-#~         elseif year == 2016
-#~             title(days, Date(year, 9, 26), name)
-#~         elseif 2017 <= year <= 2020
-#~             labour_day = Date(year, 10, 1) + rd(weekday=MO)
-#~             if year == 2017
-#~                 dt = Date(year, 9, 23) + rd(weekday=MO)
-#~             elseif year == 2018
-#~                 dt = Date(year, 9, 29) + rd(weekday=MO)
-#~             elseif year == 2019
-#~                 dt = Date(year, 9, 28) + rd(weekday=MO)
-#~             elseif year == 2020
-#~                 dt = Date(year, 9, 26) + rd(weekday=MO)
-#~             if dt == labour_day
-#~                 dt += rd(weekday=MO(+1))
-#~             title(days, Date(year, 9, 26), name)
+    # Family & Community Day
+    if region == "ACT"
+        name = "Family & Community Day"
+        if 2007 <= year <= 2009
+            title(days, add_day(Date(year, 11, 1), Tuesday, 1), name)
+        elseif year == 2010
+            # first Monday of the September/October school holidays
+            # moved to the second Monday if this falls on Labour day
+            # TODO need a formula for the ACT school holidays then
+            # http://www.cmd.act.gov.au/communication/holidays
+            title(days, Date(year, 9, 26), name)
+        elseif year == 2011
+            title(days, Date(year, 10, 10), name)
+        elseif year == 2012
+            title(days, Date(year, 10, 8), name)
+        elseif year == 2013
+            title(days, Date(year, 9, 30), name)
+        elseif year == 2014
+            title(days, Date(year, 9, 29), name)
+        elseif year == 2015
+            title(days, Date(year, 9, 28), name)
+        elseif year == 2016
+            title(days, Date(year, 9, 26), name)
+        elseif 2017 <= year <= 2020
+            labour_day = add_day(Date(year, 10, 1), Monday, 1)
+            if year == 2017
+                dt = add_day(Date(year, 9, 23), Monday, 1)
+            elseif year == 2018
+                dt = add_day(Date(year, 9, 29), Monday, 1)
+            elseif year == 2019
+                dt = add_day(Date(year, 9, 28), Monday, 1)
+            elseif year == 2020
+                dt = add_day(Date(year, 9, 26), Monday, 1)
+            end
+            if dt == labour_day
+                dt = add_day(dt, Monday, 1)
+            end
+            title(days, Date(year, 9, 26), name)
+        end
+    end
 
-#~     # Melbourne Cup
-#~     if region == "VIC"
-#~         name = "Melbourne Cup"
-#~         title(days, Date(year, 11, 1) + rd(weekday=TU), name)
+    # Melbourne Cup
+    if region == "VIC"
+        name = "Melbourne Cup"
+        title(days, add_day(Date(year, 11, 1), Tuesday, 1), name)
+    end
 
-#~     # Christmas Day
-#~     name = "Christmas Day"
-#~     dec25 = Date(year, 12, 25)
-#~     title(days, dec25, name)
-#~     if observed && dayofweek(dec25) in weekend
-#~         title(days, Date(year, 12, 27), name * " (Observed)")
+    # Christmas Day
+    name = "Christmas Day"
+    dec25 = Date(year, 12, 25)
+    title(days, dec25, name)
+    if observed && dayofweek(dec25) in weekend
+        title(days, Date(year, 12, 27), name * " (Observed)")
+    end
 
-#~     # Boxing Day
-#~     if region == "SA"
-#~         name = "Proclamation Day"
-#~     else
-#~         name = "Boxing Day"
-#~     dec26 = Date(year, 12, 26)
-#~     title(days, dec26, name)
-#~     if observed && dayofweek(dec26) in weekend
-#~         title(days, Date(year, 12, 28), name * " (Observed)")
+    # Boxing Day
+    if region == "SA"
+        name = "Proclamation Day"
+    else
+        name = "Boxing Day"
+    end
+
+    dec26 = Date(year, 12, 26)
+    title(days, dec26, name)
+    if observed && dayofweek(dec26) in weekend
+        title(days, Date(year, 12, 28), name * " (Observed)")
+    end
 end
 
 function populate_at(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
