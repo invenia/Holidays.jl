@@ -1410,9 +1410,137 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ye
 end
 
 function populate_at(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
+    title(days, Date(year, 1, 1), "Neujahr")
+    title(days, Date(year, 1, 6), "Heilige Drei Könige")
+    title(days, add_day(easter(year), Monday, 1), "Ostermontag")
+    title(days, Date(year, 5, 1), "Staatsfeiertag")
+
+    title(days, easter(year) + Dates.Day(39), "Christi Himmelfahrt")
+    title(days, easter(year) + Dates.Day(50), "Pfingstmontag")
+    title(days, easter(year) + Dates.Day(60), "Fronleichnam")
+
+    title(days, Date(year, 8, 15), "Maria Himmelfahrt")
+    if 1919 <= year <= 1934
+        title(days, Date(year, 11, 12), "Nationalfeiertag")
+    end
+    if year >= 1967
+        title(days, Date(year, 10, 26), "Nationalfeiertag")
+    end
+    title(days, Date(year, 11, 1), "Allerheiligen")
+    title(days, Date(year, 12, 8),  "Maria Empfängnis")
+    title(days, Date(year, 12, 25), "Christtag")
+    title(days, Date(year, 12, 26), "Stefanitag")
+
 end
 
 function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, year::Int)
+    """
+    Official holidays for Germany in it's current form.
+
+    This class doesn't return any holidays before 1990-10-03.
+
+    Before that date the current Germany was separated into the "German
+    Democratic Republic" and the "Federal Republic of Germany" which both had
+    somewhat different holidays. Since this class is called "Germany" it
+    doesn't really make sense to include the days from the two former
+    countries.
+
+    Note that Germany doesn't have rules for holidays that happen on a
+    Sunday. Those holidays are still holiday days but there is no additional
+    day to make up for the "lost" day.
+
+    Also note that German holidays are partly declared by each province there
+    are some weired edge cases:
+
+        - "Mariä Himmelfahrt" is only a holiday in Bavaria (BY) if your
+          municipality is mothly catholic which in term depends on census data.
+          Since we don't have this data but most municipalities in Bavaria
+          *are* mostly catholic, we count that as holiday for whole Bavaria.
+        - There is an "Augsburger Friedensfest" which only exists in the town
+          Augsburg. This is excluded for Bavaria.
+        - "Gründonnerstag" (Thursday before easter) is not a holiday but pupil
+           don't have to go to school (but only in Baden Württemberg) which is
+           solved by adjusting school holidays to include this day. It is
+           excluded from our list.
+        - "Fronleichnam" is a holiday in certain, explicitly defined
+          municipalities in Saxony (SN) and Thuringia (TH). We exclude it from
+          both provinces.
+    """
+
+
+    if year <= 1989
+        return
+    end
+
+    if year > 1990
+        title(days, Date(year, 1, 1), "Neujahr")
+
+        if region in ("BW", "BY", "ST")
+            title(days, Date(year, 1, 6), "Heilige Drei Könige")
+        end
+
+        title(days, easter(year) + Dates.Day(-2), "Karfreitag")
+
+        if region == "BB"
+            # will always be a Sunday and we have no "observed" rule so
+            # this is pretty pointless but it's nonetheless an official
+            # holiday by law
+            title(days, easter(year), "Ostern")
+        end
+
+        title(days, easter(year) + Dates.Day(1), "Ostermontag")
+
+        title(days, Date(year, 5, 1), "Maifeiertag")
+
+        title(days, easter(year) + Dates.Day(39), "Christi Himmelfahrt")
+
+        if region == "BB"
+            # will always be a Sunday and we have no "observed" rule so
+            # this is pretty pointless but it's nonetheless an official
+            # holiday by law
+            title(days, easter(year) + Dates.Day(49), "Pfingsten")
+        end
+
+        title(days, easter(year) + Dates.Day(50), "Pfingstmontag")
+
+        if region in ("BW", "BY", "HE", "NW", "RP", "SL")
+            title(days, easter(year) + Dates.Day(60), "Fronleichnam")
+        end
+
+        if region in ("BY", "SL")
+            title(days, Date(year, 8, 15), "Mariä Himmelfahrt")
+        end
+
+        title(days, Date(year, 10, 3), "Tag der Deutschen Einheit")
+    end
+
+    if region in ("BB", "MV", "SN", "ST", "TH")
+        title(days, Date(year, 10, 31), "Reformationstag")
+    end
+
+
+    if region in ("BW", "BY", "NW", "RP", "SL")
+        title(days, Date(year, 11, 1), "Allerheiligen")
+    end
+
+    if region == "SN"
+        # can be calculated as "last wednesday before year-11-23" which is
+        # why we need to go back two wednesdays if year-11-23 happens to be
+        # a wednesday
+        # base_data =
+
+        # weekday_delta = WE(-2) if base_data.weekday() == 2 else WE(-1)
+        # self[base_data + rd(weekday=weekday_delta)] = "Buß- und Bettag"
+
+        #prev_weekday (my function) skips the current weekday
+        #But the builtin function includes it.
+
+        date = Dates.toprev(x->Dates.dayofweek(x) == Dates.Wednesday, Date(year, 11, 23))
+        title(days, date, "Buß- und Bettag")
+    end
+
+    title(days, Date(year, 12, 25), "Erster Weihnachtstag")
+    title(days, Date(year, 12, 26), "Zweiter Weihnachtstag")
 end
 
 populators =  Dict{AbstractString, Function}(
