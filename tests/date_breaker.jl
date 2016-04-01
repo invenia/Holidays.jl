@@ -4,7 +4,10 @@ using StackTraces
 (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) = (Dates.Monday, Dates.Tuesday, Dates.Wednesday, Dates.Thursday, Dates.Friday, Dates.Saturday, Dates.Sunday)
 
 function datebreaker()
-    try
+    date = Date(2018, 1, 1)
+    date_name = ""
+
+#~     try
         # Loop until failure.
         while true
             # Loop through dates and weekdays
@@ -23,17 +26,17 @@ function datebreaker()
                 end
             end
         end
-    catch e
-        # Help diagnose the error by printing as much stuff as possible.
-        whos()
-        println(stacktrace())
-        println("Error",e)
-        println("Last date tried:",date)
-        println("Date Name is currently",date_name)
-        return false
-    end
+#~     catch e
+#~         # Help diagnose the error by printing as much stuff as possible.
+#~         whos()
+#~         println(stacktrace())
+#~         println("Error",e)
+#~         println("Last date tried:",date)
+#~         println("Date Name is currently",date_name)
+#~         return false
+#~     end
 
-    return true
+#~     return true
 end
 
 # Loop this until the error happens...
