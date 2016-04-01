@@ -35,8 +35,8 @@ function sub_day(date, weekday, count)
         count = count -1
     end
 
-    for i in range (0, count)
-        date = Dates.toprev(x->Dates.dayofweek(x) == weekday, date)
+    for i in range(0, count)
+        date = Dates.toprev(date, weekday, same=false)
     end
 
     return date
@@ -48,8 +48,8 @@ function add_day(date, weekday, count)
         count = count -1
     end
 
-    for i in range (0, count)
-        date = Dates.tonext(x->Dates.dayofweek(x) == weekday, date)
+    for i in range(0, count)
+        date = Dates.tonext(date, weekday, same=false)
     end
 
     return date
@@ -57,19 +57,11 @@ end
 
 # Returns same date if this is is "weekday"
 function next_weekday(date, weekday)
-    if dayofweek(date) == weekday
-        return date
-    end
-
-    Dates.tonext(x->Dates.dayofweek(x) == weekday, date)
+    return Dates.tonext(date, weekday, same=true)
 end
 
 function prev_weekday(date, weekday)
-    if dayofweek(date) == weekday
-        return date
-    end
-
-    Dates.toprev(x->Dates.dayofweek(x) == weekday, date)
+    return Dates.toprev(date, weekday, same=true)
 end
 
 function nearest(date, weekday)

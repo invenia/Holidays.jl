@@ -11,13 +11,13 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 # Add regions to test here
 regions = Dict(
     # Working Regions
-    #"CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
+    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
     "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"],
-    #"MX"=>[""],
-    #"NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
-    #"AU" => ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"],
-    #"AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"],
-    #"DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
+    "MX"=>[""],
+    "NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
+    "AU" => ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"],
+    "AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"],
+    "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
 )
 
 # Set first and last date in loop

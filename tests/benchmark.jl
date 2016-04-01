@@ -8,7 +8,7 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 @pyimport pyholiday
 
-start_date = Date(2000, 1, 1)
+start_date = Date(1900, 1, 1)
 last_date = Date(2005, 1, 1)
 
 regions = Dict(
