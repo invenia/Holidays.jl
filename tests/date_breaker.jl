@@ -10,22 +10,19 @@ function datebreaker()
     try
         # Loop until failure.
         while true
-            # Loop through dates and weekdays
-            # for weekday in (Dates.Monday, Dates.Tuesday, Dates.Wednesday, Dates.Thursday, Dates.Friday, Dates.Saturday, Dates.Sunday)
-            for weekday in (Dates.Sunday, Dates.Monday, Dates.Saturday, Dates.Friday, Dates.Tuesday, Dates.Wednesday, Dates.Thursday)
-                last_weekday = weekday
+            weekday = rand(0:6)
 
-                date = Date(1967, 3, 9)
-                last_date = Date(2024, 4, 2)
+            last_weekday = weekday
 
-                while date < last_date
-                    # This call is where the error will be raised from first...
-                    temp = Dates.tonext(x->Dates.dayofweek(x) == weekday, date)
+            date = Date(1990, 12, 1)
+            last_date = Date(2999, 1, 9)
 
-                    x = x + 1
+            while date < last_date
+                temp = Dates.tonext(x->Dates.dayofweek(x) == weekday, date)
 
-                    date = date + Dates.Day(1)
-                end
+                x = x + 1
+
+                date = date + Dates.Day(1)
             end
         end
     catch e

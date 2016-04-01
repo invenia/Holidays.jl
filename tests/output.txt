@@ -123,3 +123,17 @@ Successful Runs:65266
 real    1m35.230s
 user    1m35.128s
 sys 0m0.880s
+
+
+karl@lark:~/invenia/Holidays.jl/tests$ julia date_breaker.jl
+                          Base  23556 KB     Module
+                          Core   2860 KB     Module
+                          Main  26229 KB     Module
+                   StackTraces    267 KB     Module
+                   datebreaker   6961 bytes  Function
+[StackTraces.StackFrame(:datebreaker,symbol("/home/karl/invenia/Holidays.jl/tests/date_breaker.jl"),36,symbol(""),-1,false,140041052770556),StackTraces.StackFrame(:include,symbol("./boot.jl"),261,symbol(""),-1,false,140040975541919),StackTraces.StackFrame(:include_from_node1,symbol("./loading.jl"),320,symbol(""),-1,false,140040977538376),StackTraces.StackFrame(:process_options,symbol("./client.jl"),280,symbol(""),-1,false,140040977487894),StackTraces.StackFrame(:_start,symbol("./client.jl"),378,symbol(""),-1,false,140040977480710)]
+ErrorMethodError(call,(Core,1974-09-03))
+Last date tried:1974-09-02
+Last weekday tried:3
+Successful Runs:65266
+100.588415 seconds (7.74 M allocations: 351.922 MB, 0.16% gc time)
