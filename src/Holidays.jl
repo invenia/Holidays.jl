@@ -1,6 +1,8 @@
 VERSION >= v"0.4-" && __precompile__()
 
 module Holidays
+export HolidayBase, countryRegions, holidayCache, easter, dayName
+
 # Credits:
 
 # This program closely borrows the logic for calculating most holidays from
@@ -8,9 +10,7 @@ module Holidays
 # Calculating easter is done using a julia port of IanTaylorEasterJscr(year) from
 # https://en.wikipedia.org/wiki/Computus#Algorithms
 
-observed = true
-
-# Shorthand
+observed = true # TODO - Add support for observed / nonobserved.
 
 weekend = [Dates.Saturday, Dates.Sunday]
 dayofweek = Dates.dayofweek
@@ -90,12 +90,12 @@ function easter(year)
     return Date(year, month, day)
 end
 
-function title(cache, date, day)
+function title(holiday_cache, date, day)
     # If holiday already has a name, prepend the new one with a ,
-    if haskey(cache, date)
-        cache[date] = day * ", " * cache[date]
+    if haskey(holiday_cache, date)
+        holiday_cache[date] = day * ", " * holiday_cache[date]
     else
-        cache[date] = day
+        holiday_cache[date] = day
     end
 end
 
@@ -1544,7 +1544,12 @@ populators =  Dict{AbstractString, Function}(
     "DE"=>populate_de
 )
 
-function Cache(; country="CA", region="MB", years::Array{Int}=Int[])
+function holidayCache(; country="CA", region="MB", years::Array{Int}=Int[])
+    if !haskey(populators, country)
+        throw(ArgumentError("Invalid Country: " * country * ", valid countries are " * string(keys(populators))))
+#~         throw(ArgumentError("Invalid Country, " * country))
+    end
+
     years = Set(years)
 
     holidays = Dict{Date,AbstractString}()
@@ -1572,6 +1577,31 @@ function dayName(date::Date, holidays::HolidayBase)
     else
         return Void
     end
+end
+
+regions = Dict(
+    # Working Regions
+    "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
+    "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"],
+    "MX"=>[""],
+    "NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
+    "AU" => ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"],
+    "AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"],
+    "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
+)
+
+function countryRegions(country)
+    if haskey(regions, country)
+        return regions[country]
+    else
+        throw(ArgumentError("Unknown Country: ",country))
+    end
+end
+
+function createHolidaySum()
+"""
+unimplemented
+"""
 end
 
 end

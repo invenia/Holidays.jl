@@ -21,8 +21,8 @@ regions = Dict(
 )
 
 # Set first and last date in loop
-start_date = Date(1900, 1, 1)
-last_date = Date(2030, 1, 1)
+start_date = Date(2000, 1, 1)
+last_date = Date(2001, 1, 1)
 
 println("Start Date:",start_date)
 println("Last Date:",last_date)
@@ -39,7 +39,7 @@ function day_names_equal(x, y)
 end
 
 function compareHolidays(country, province)
-    dates = Holidays.Cache(country=country, region=province, years=[2016])
+    dates = holidayCache(country=country, region=province, years=[2016])
     pyholiday.load(country, province)
 
     date = start_date
@@ -49,15 +49,10 @@ function compareHolidays(country, province)
     try
         while date < last_date
             x = pyholiday.get(date)
-            y = Holidays.dayName(date, dates)
+            y = dayName(date, dates)
 
             if !day_names_equal(x, y)
                 println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
-
-            # Record holidays that succeeded:
-            #~         elseif isa(x, AbstractString) && isa(y, AbstractString)
-            #~             println("       Success on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
-
             end
 
             date = date + Dates.Day(1)
@@ -71,7 +66,7 @@ function compareHolidays(country, province)
         println("Last date tried:",date)
 
         x = pyholiday.get(date)
-        y = Holidays.dayName(date, dates)
+        y = dayName(date, dates)
 
         println("Value of X",x)
         println("Value of Y",y)
@@ -149,7 +144,7 @@ function test_easter()
         west_string = "$year-$west_month-$west_day"
         west_date = Date(west_string)
 
-        calculated_easter = Holidays.easter(Dates.year(west_date))
+        calculated_easter = easter(Dates.year(west_date))
 
         if west_date != calculated_easter
             println("Errror calculating western easter date")
