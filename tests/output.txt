@@ -1,0 +1,61 @@
+karl@lark:~/invenia/Holidays.jl/tests$ julia date_breaker.jl 
+Testing weekday1
+Testing weekday2
+Testing weekday3
+Testing weekday4
+Testing weekday5
+Testing weekday6
+Testing weekday7
+Testing weekday1
+Testing weekday2
+Testing weekday3
+Testing weekday4
+Testing weekday5
+Testing weekday6
+Testing weekday7
+Testing weekday1
+Testing weekday2
+Testing weekday3
+Testing weekday4
+Testing weekday5
+Testing weekday6
+Testing weekday7
+Testing weekday1
+Testing weekday2
+Testing weekday3
+Testing weekday4
+Testing weekday5
+Testing weekday6
+Testing weekday7
+Testing weekday1
+Testing weekday2
+Testing weekday3
+Testing weekday4
+Testing weekday5
+Testing weekday6
+Testing weekday7
+Testing weekday1
+Testing weekday2
+Testing weekday3
+Testing weekday4
+Testing weekday5
+Testing weekday6
+Testing weekday7
+Testing weekday1
+Testing weekday2
+Testing weekday3
+ERROR: LoadError: MethodError: `call` has no method matching call(::Module, ::Date)
+Closest candidates are:
+  BoundsError()
+  BoundsError(!Matched::Any...)
+  DivideError()
+  ...
+ in anonymous at dates/adjusters.jl:73
+ in adjust at dates/adjusters.jl:81
+ in tonext at dates/adjusters.jl:125
+ in datebreaker at /home/karl/invenia/Holidays.jl/tests/date_breaker.jl:23
+ in include at ./boot.jl:261
+ in include_from_node1 at ./loading.jl:320
+ in process_options at ./client.jl:280
+ in _start at ./client.jl:378
+while loading /home/karl/invenia/Holidays.jl/tests/date_breaker.jl, in expression starting on line 155
