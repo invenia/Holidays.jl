@@ -22,7 +22,7 @@ function julia_test()
         println("Testing country ",country)
         for province in provinces
             println("Country: ",country, ", Province: ",province)
-            dates = Holidays.Canada(region=province)
+            dates = Holidays.Cache(country=country, region=province)
 
             date = start_date
 

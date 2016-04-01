@@ -1,10 +1,6 @@
 using PyCall
 using Holidays
 
-#Requirements:
-# Pkg.add("DataStructures")
-#
-
 #Force load of python module in current directory
 unshift!(PyVector(pyimport("sys")["path"]), "")
 
@@ -12,33 +8,21 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 # Constants
 
-# All regions:
-## Australia    AU  prov = ACT (default), NSW, NT, QLD, SA, TAS, VIC, WA
-## Austria  AT  prov = B, K, N, O, S, ST, T, V, W (default)
-## Canada   CA  prov = AB, BC, MB, NB, NL, NS, NT, NU, ON (default), PE, QC, SK, YU
-## Germany  DE  BW, BY, BE, BB, HB, HH, HE, MV, NI, NW, RP, SL, SN, ST, SH, TH
-## Mexico   MX  None
-## NewZealand   NZ  prov = NTL, AUK, TKI, HKB, WGN, MBH, NSN, CAN, STC, WTL, OTA, STL, CIT
-## UnitedStates     US  state = AL, AK, AS, AZ, AR, CA, CO, CT, DE, DC, FL, GA, GU, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD, MH, MA, MI, FM, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, MP, OH, OK, OR, PW, PA, PR, RI, SC, SD, TN, TX, UT, VT, VA, VI, WA, WV, WI, WY
-
 # Add regions to test here
 regions = Dict(
     # Working Regions
-    # "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
-    # "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"]
-    # "MX"=>[""],
-    # "NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
-    # "AU" => ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"],
-    # "AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"]
-    "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"]
+    #"CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
+    "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"],
+    #"MX"=>[""],
+    #"NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
+    #"AU" => ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"],
+    #"AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"],
+    #"DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
 )
 
 # Set first and last date in loop
 start_date = Date(1900, 1, 1)
-last_date = Date(2020, 1, 1)
-
-#~ start_date = Date(2000, 1, 1)
-#~ last_date = Date(2001, 1, 1)
+last_date = Date(2030, 1, 1)
 
 println("Start Date:",start_date)
 println("Last Date:",last_date)
@@ -59,22 +43,42 @@ function compareHolidays(country, province)
     pyholiday.load(country, province)
 
     date = start_date
+    x = 0
+    y = 0
 
-    while date < last_date
+    try
+        while date < last_date
+            x = pyholiday.get(date)
+            y = Holidays.dayName(date, dates)
+
+            if !day_names_equal(x, y)
+                println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+
+            # Record holidays that succeeded:
+            #~         elseif isa(x, AbstractString) && isa(y, AbstractString)
+            #~             println("       Success on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+
+            end
+
+            date = date + Dates.Day(1)
+        end
+
+    catch e
+        whos()
+        println("Error",e)
+        println("Value of X",x)
+        println("Value of Y",y)
+        println("Last date tried:",date)
+
         x = pyholiday.get(date)
         y = Holidays.dayName(date, dates)
 
-        if !day_names_equal(x, y)
-            println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+        println("Value of X",x)
+        println("Value of Y",y)
 
-        # Record holidays that succeeded:
-#~         elseif isa(x, AbstractString) && isa(y, AbstractString)
-#~             println("       Success on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
-
-        end
-
-        date = date + Dates.Day(1)
     end
+
+
 end
 
 function loop_regions()
@@ -156,6 +160,6 @@ function test_easter()
 end
 
 @time loop_regions()
-# test_easter()
+@time test_easter()
 
 

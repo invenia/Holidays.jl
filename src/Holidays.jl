@@ -1,7 +1,6 @@
 VERSION >= v"0.4-" && __precompile__()
 
 module Holidays
-
 # Credits:
 
 # This program closely borrows the logic for calculating most holidays from

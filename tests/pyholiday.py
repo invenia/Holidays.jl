@@ -8,6 +8,7 @@ def get(julia_date):
     return dates.get(julia_date)
 
 def load(country, region):
+    # Erases existing holiday cache and makes a new one...
     global dates
 
     if country == "US":
