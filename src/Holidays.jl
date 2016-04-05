@@ -4,7 +4,6 @@ module Holidays
 export HolidayBase, countryRegions, holidayCache, dayName
 
 # Credits:
-
 # This program closely borrows the logic for calculating most holidays from
 # https://github.com/ryanss/holidays.py
 # Calculating easter is done using a julia port of IanTaylorEasterJscr(year) from
