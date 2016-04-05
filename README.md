@@ -1,4 +1,7 @@
 # Holidays.jl
+
+[![Build Status](https://travis-ci.org/invenia/Holidays.jl.svg?branch=master)](https://travis-ci.org/invenia/Holidays.jl)
+
 Julia library for handling holidays
 
 ## Example Usage
