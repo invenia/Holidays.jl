@@ -4,7 +4,6 @@ import holidays
 dates = None
 
 def get(julia_date):
-    #~ return date(year, month, day) in us_holidays
     return dates.get(julia_date)
 
 def load(country, region):

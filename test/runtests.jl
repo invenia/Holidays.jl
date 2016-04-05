@@ -1,5 +1,7 @@
+using Base.Test
 using PyCall
 using Holidays
+using Compat
 
 #Force load of python module in current directory
 unshift!(PyVector(pyimport("sys")["path"]), "")
@@ -21,8 +23,9 @@ regions = Dict(
 )
 
 # Set first and last date in loop
-start_date = Date(2000, 1, 1)
-last_date = Date(2010, 1, 1)
+#~ start_date = Date(1990, 1, 1)
+start_date = Date(2029, 1, 1)
+last_date = Date(2030, 1, 1)
 
 println("Start Date:",start_date)
 println("Last Date:",last_date)
@@ -39,6 +42,8 @@ function day_names_equal(x, y)
 end
 
 function compareHolidays(country, province)
+    success = true
+
     dates = holidayCache(country=country, region=province, years=[2016])
     pyholiday.load(country, province)
 
@@ -53,12 +58,14 @@ function compareHolidays(country, province)
 
             if !day_names_equal(x, y)
                 println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+                success = false
             end
 
             date = date + Dates.Day(1)
         end
 
     catch e
+        success = false
         whos()
         println("Error",e)
         println("Value of X",x)
@@ -73,7 +80,7 @@ function compareHolidays(country, province)
 
     end
 
-
+    return success
 end
 
 function loop_regions()
@@ -81,12 +88,14 @@ function loop_regions()
         println("Testing ",country)
         for province in provinces
             println("   Country: ",country, ", Province: ",province)
-            compareHolidays(country, province)
+            @test compareHolidays(country, province)
         end
     end
 end
 
 function test_easter()
+    success = true
+
     # Hard coded known correct dates for easter - Will be compared to my calculated version.
     # Taken from https://en.wikipedia.org/wiki/List_of_dates_for_Easter
     # Only tests western gregorian calendar at present. Function does not support eastern yet.
@@ -136,7 +145,6 @@ function test_easter()
     2036    04 13    04 20
     """
 
-    # Split into lines
     easter_strs = split(strip(easter_table), "\n")
 
     for line in easter_strs
@@ -144,17 +152,20 @@ function test_easter()
         west_string = "$year-$west_month-$west_day"
         west_date = Date(west_string)
 
-        calculated_easter = easter(Dates.year(west_date))
+        calculated_easter = Holidays.easter(Dates.year(west_date))
 
         if west_date != calculated_easter
+            success = false
             println("Errror calculating western easter date")
             println("  Wikipedia's value: ",Dates.format(west_date, "yyyy u dd"))
             println("  Estimated value  : ",Dates.format(calculated_easter, "yyyy u dd"))
         end
     end
+
+    return success
 end
 
-@time loop_regions()
-@time test_easter()
+loop_regions()
+@test test_easter()
 
 

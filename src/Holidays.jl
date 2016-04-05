@@ -1,7 +1,7 @@
 VERSION >= v"0.4-" && __precompile__()
 
 module Holidays
-export HolidayBase, countryRegions, holidayCache, easter, dayName
+export HolidayBase, countryRegions, holidayCache, dayName
 
 # Credits:
 
@@ -27,6 +27,7 @@ const regions = Dict(
     "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
 )
 
+
 """
 `HolidayBase`: stores cached information about holidays to speed up future lookups,
 as well as the current locale information.
@@ -51,14 +52,15 @@ type HolidayBase
     region::AbstractString
 end
 
+
 """
 `subDay(date::Date, weekday::Int, count::Int)`: counts backwards from the given date one
-week at a time, and returns a date $count weeks in the past where the day of week == weekday.
+week at a time, and returns a date `count` weeks in the past where the day of week == weekday.
 If the day of week of the start date is the same as the specified weekday, this will
 count back one week less.
 
 Returns:
-- `Date`: the resulting date after subtraction of $count weeks.
+- `Date`: the resulting date after subtraction of `count` weeks.
 """
 function subDay(date::Date, weekday::Int, count::Int)
     if dayofweek(date) == weekday
@@ -72,14 +74,15 @@ function subDay(date::Date, weekday::Int, count::Int)
     return date
 end
 
+
 """
 `addDay(date::Date, weekday::Int, count::Int)`: counts forwards from the given date one
-week at a time, and returns a date $count weeks in the future where the day of week == weekday.
+week at a time, and returns a date `count` weeks in the future where the day of week == weekday.
 If the day of week of the start date is the same as the specified weekday, this will
 count forwards one week less.
 
 Returns:
-- `Date`: the resulting date after addition of $count weeks.
+- `Date`: the resulting date after addition of `count` weeks.
 """
 function addDay(date::Date, weekday::Int, count::Int)
     if dayofweek(date) == weekday
@@ -93,6 +96,14 @@ function addDay(date::Date, weekday::Int, count::Int)
     return date
 end
 
+"""
+`nearest(date::Date, weekday::Int)`: finds the closest date value where
+dayofweek(value) == `weekday` to the provided date.
+Will return the provided date if dayofweek(date) == `weekday`
+
+Returns:
+- `Date`: the nearest matching date
+"""
 function nearest(date::Date, weekday::Int)
     dt1 = toprev(date, weekday; same=true)
     dt2 = tonext(date, weekday; same=true)
@@ -104,6 +115,13 @@ function nearest(date::Date, weekday::Int)
     end
 end
 
+"""
+`easter(year::Int)`: Calculates easter for the given year, according to the western calendar.
+Dates for the eastern calendar differ, so verify what format you expect before use.
+
+Returns:
+- `Date`: The date of easter in the provided year
+"""
 function easter(year::Int)
     a = year % 19
     b = year >> 2
@@ -118,6 +136,14 @@ function easter(year::Int)
     return Date(year, month, day)
 end
 
+"""
+`title(holidays::Dict{Date,AbstractString}, date::Date, day::AbstractString)`:
+Maps a date to the name of a holiday in the cache. If a key already has a holiday name
+attached, this will prepend the new date with a comma and space between.
+
+Returns:
+- Nothing
+"""
 function title(holidays::Dict{Date,AbstractString}, date::Date, day::AbstractString)
     # If holiday already has a name, prepend the new one with a ,
     if haskey(holidays, date)
@@ -127,8 +153,16 @@ function title(holidays::Dict{Date,AbstractString}, date::Date, day::AbstractStr
     end
 end
 
-# Adapted from https://en.wikipedia.org/wiki/Computus#Algorithms, see IanTaylorEasterJscr(year):
+"""
+`populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year
+and region. For canada, regions are provinces / territories.
+If observed is true, then when a holiday conflicts with a weekend and is legally observed on
+another date, a seperate entry will be created for the observed date.
 
+Returns:
+- Nothing
+"""
 function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # New Year's Day
     if year >= 1867
@@ -318,6 +352,16 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 end
 
+"""
+`populate_us(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year
+and region. For the USA, regions are states.
+If observed is true, then when a holiday conflicts with a weekend and is legally observed on
+another date, a seperate entry will be created for the observed date.
+
+Returns:
+- Nothing
+"""
 function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # New Year's Day
     if year > 1870
@@ -915,6 +959,17 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 end
 
+"""
+`populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+Mexico has no regions relevant for holiday calculation.
+
+If observed is true, then when a holiday conflicts with a weekend and is legally observed on
+another date, a seperate entry will be created for the observed date.
+
+Returns:
+- Nothing
+"""
 function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # New Year's Day
     name = "Año Nuevo [New Year's Day]"
@@ -1000,8 +1055,19 @@ function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 end
 
-function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+"""
+`populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+For new zealand, regions are provinces.
 
+If observed is true, then when a holiday conflicts with a weekend and is legally observed on
+another date, a seperate entry will be created for the observed date.
+
+Returns:
+- Nothing
+"""
+function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+    # Holidays to research:
     # Bank Holidays Act 1873
     # The Employment of Females Act 1873
     # Factories Act 1894
@@ -1083,10 +1149,8 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Labour Day
     name = "Labour Day"
     if year >= 1910
-#~         title(days, Date(year, 10, 1) + rd(weekday=MO(+4)), name)
         title(days, addDay(Date(year, 10, 1),Mon,4), name)
     elseif year > 1899
-#~         title(days, Date(year, 10, 1) + rd(weekday=WE(+2)), name)
         title(days, addDay(Date(year, 10, 1), Wed, 2), name)
     end
 
@@ -1168,7 +1232,7 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
         mar23 = Date(year, 3, 23)
         date = nearest(mar23, Mon)
 
-        if date == addDay(easter(year), Mon, 1)    # Avoid Easter Monday
+        if date == addDay(easter(year), Mon, 1) # Avoid Easter Monday
             date = date + Dates.Day(1)
         end
         title(days, date, name)
@@ -1189,7 +1253,19 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 end
 
+"""
+`populate_au(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+For Australia, regions are provinces.
+
+If observed is true, then when a holiday conflicts with a weekend and is legally observed on
+another date, a seperate entry will be created for the observed date.
+
+Returns:
+- Nothing
+"""
 function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+    # Holidays to research:
     # ACT:  Holidays Act 1958
     # NSW:  Public Holidays Act 2010
     # NT:   Public Holidays Act 2013
@@ -1399,6 +1475,17 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 end
 
+"""
+`populate_at(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+For Austria, regions are provinces.
+
+Conflicting holidays are not observed on different dates in Austria, so the value of observed
+has no effect.
+
+Returns:
+- Nothing
+"""
 function populate_at(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     title(days, Date(year, 1, 1), "Neujahr")
     title(days, Date(year, 1, 6), "Heilige Drei Könige")
@@ -1423,41 +1510,53 @@ function populate_at(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
 end
 
+"""
+`populate_de(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+
+for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+For Germany, regions are provinces.
+
+If observed is true, then when a holiday conflicts with a weekend and is legally observed on
+another date, a seperate entry will be created for the observed date.
+
+Returns:
+
+- Nothing
+
+Notes:
+
+This class doesn't return any holidays before 1990-10-03.
+
+Before that date the current Germany was separated into the "German
+Democratic Republic" and the "Federal Republic of Germany" which both had
+somewhat different holidays. It doesn't really make sense to include the
+days from the two former countries.
+
+Note that Germany doesn't have rules for holidays that happen on a
+Sunday. Those holidays are still holiday days but there is no additional
+day to make up for the "lost" day.
+
+Also note that German holidays are partly declared by each province there
+are some weired edge cases:
+
+    - "Mariä Himmelfahrt" is only a holiday in Bavaria (BY) if your
+      municipality is mothly catholic which in term depends on census data.
+      Since we don't have this data but most municipalities in Bavaria
+      *are* mostly catholic, we count that as holiday for whole Bavaria.
+
+    - There is an "Augsburger Friedensfest" which only exists in the town
+      Augsburg. This is excluded for Bavaria.
+
+    - "Gründonnerstag" (Thursday before easter) is not a holiday but pupil
+       don't have to go to school (but only in Baden Württemberg) which is
+       solved by adjusting school holidays to include this day. It is
+       excluded from our list.
+
+    - "Fronleichnam" is a holiday in certain, explicitly defined
+      municipalities in Saxony (SN) and Thuringia (TH). We exclude it from
+      both provinces.
+"""
 function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
-    """
-    Official holidays for Germany in it's current form.
-
-    This class doesn't return any holidays before 1990-10-03.
-
-    Before that date the current Germany was separated into the "German
-    Democratic Republic" and the "Federal Republic of Germany" which both had
-    somewhat different holidays. Since this class is called "Germany" it
-    doesn't really make sense to include the days from the two former
-    countries.
-
-    Note that Germany doesn't have rules for holidays that happen on a
-    Sunday. Those holidays are still holiday days but there is no additional
-    day to make up for the "lost" day.
-
-    Also note that German holidays are partly declared by each province there
-    are some weired edge cases:
-
-        - "Mariä Himmelfahrt" is only a holiday in Bavaria (BY) if your
-          municipality is mothly catholic which in term depends on census data.
-          Since we don't have this data but most municipalities in Bavaria
-          *are* mostly catholic, we count that as holiday for whole Bavaria.
-        - There is an "Augsburger Friedensfest" which only exists in the town
-          Augsburg. This is excluded for Bavaria.
-        - "Gründonnerstag" (Thursday before easter) is not a holiday but pupil
-           don't have to go to school (but only in Baden Württemberg) which is
-           solved by adjusting school holidays to include this day. It is
-           excluded from our list.
-        - "Fronleichnam" is a holiday in certain, explicitly defined
-          municipalities in Saxony (SN) and Thuringia (TH). We exclude it from
-          both provinces.
-    """
-
-
     if year <= 1989
         return
     end
@@ -1473,8 +1572,7 @@ function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
         if region == "BB"
             # will always be a Sunday and we have no "observed" rule so
-            # this is pretty pointless but it's nonetheless an official
-            # holiday by law
+            # this is pretty pointless but it's nonetheless an official holiday by law
             title(days, easter(year), "Ostern")
         end
 
@@ -1486,8 +1584,7 @@ function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
         if region == "BB"
             # will always be a Sunday and we have no "observed" rule so
-            # this is pretty pointless but it's nonetheless an official
-            # holiday by law
+            # this is pretty pointless but it's nonetheless an official holiday by law
             title(days, easter(year) + Dates.Day(49), "Pfingsten")
         end
 
@@ -1515,8 +1612,7 @@ function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     if region == "SN"
         # can be calculated as "last wednesday before year-11-23" which is
-        # why we need to go back two wednesdays if year-11-23 happens to be
-        # a wednesday
+        # why we need to go back two wednesdays if year-11-23 happens to be a wednesday
 
         date = Dates.toprev(x->Dates.dayofweek(x) == Wed, Date(year, 11, 23))
         title(days, date, "Buß- und Bettag")
@@ -1536,6 +1632,16 @@ populators =  Dict{AbstractString, Function}(
     "DE"=>populate_de
 )
 
+"""
+`holidayCache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])`:
+
+Populates holiday cache for the given years, country, and region. If observed is true, then
+alternative observed dates will be set as well. If expand is true, then whenever a lookup
+is made for a non cached date, that year of holidays will be populated in the cache.
+
+Returns:
+- `HolidayBase`: The cache for future calls to lookup dates.
+"""
 function holidayCache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])
     if !haskey(populators, country)
         throw(ArgumentError("Invalid Country: " * country * ", valid countries are " * string(keys(populators))))
@@ -1554,6 +1660,14 @@ function holidayCache(; country::AbstractString="CA", region::AbstractString="MB
     HolidayBase(holidays, years, expand, observed, country, region)
 end
 
+"""
+`dayName(date::Date, holidays::HolidayBase)`: Find corresponding holiday names for a date. If
+the given date is in the holiday cache this is a simple lookup. If it is not in cache, and
+expand is enabled, then the new year will be populated. Otherwise this will just return nothing.
+
+Returns:
+- `AbstractString`: Holiday name for the given date, or Void if there is no corresponding holiday name.
+"""
 function dayName(date::Date, holidays::HolidayBase)
     if !(Dates.year(date) in holidays.years)
         populate = populators[holidays.country]
@@ -1569,18 +1683,18 @@ function dayName(date::Date, holidays::HolidayBase)
     end
 end
 
+"""
+`countryRegions(country::AbstractString)`: For lookup of regions in a country
+
+Returns:
+- `Array{AbstractString,N}`: Recognized regions within a given country
+"""
 function countryRegions(country::AbstractString)
     if haskey(regions, country)
         return regions[country]
     else
         throw(ArgumentError("Unknown Country: ",country))
     end
-end
-
-function createHolidaySum()
-"""
-unimplemented
-"""
 end
 
 end
