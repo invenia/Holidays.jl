@@ -8,8 +8,8 @@ julia:
 notifications:
     email: false
 sudo: false
+install: pip install --user -r holidays
 script:
-    - pip install --user holidays
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
     - julia --check-bounds=yes --color=yes -e 'Pkg.clone(pwd()); Pkg.build("Holidays"); Pkg.test("Holidays"; coverage=true)'
 after_success:
