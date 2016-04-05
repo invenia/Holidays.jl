@@ -24,8 +24,8 @@ regions = Dict(
 
 # Set first and last date in loop
 #~ start_date = Date(1990, 1, 1)
-start_date = Date(2029, 1, 1)
-last_date = Date(2030, 1, 1)
+start_date = Date(2016, 1, 1)
+last_date = Date(2018, 1, 1)
 
 println("Start Date:",start_date)
 println("Last Date:",last_date)
