@@ -28,7 +28,7 @@ function julia_test()
         println("   Testing country ",country)
         for province in provinces
             println("       Country: ",country, ", Province: ",province)
-            dates = Holidays.Cache(country=country, region=province)
+            dates = holidayCache(country=country, region=province)
 
             date = start_date
 
@@ -59,8 +59,11 @@ function python_test()
 end
 
 function compare_versions()
-    @time julia_test()
     @time python_test()
+    println("Time for Python Version")
+
+    @time julia_test()
+    println("Time for Julia Version")
 end
 
 compare_versions()
