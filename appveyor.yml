@@ -46,7 +46,8 @@ install:
   - "pip install --user holidays"
 
   # PyCall will not be able to find the new python unless we rebuild it with the correct path.
-  - "ENV[\"PYTHON\"] = \"%PYTHON%\""
+  #~ - "ENV[\"PYTHON\"] = \"%PYTHON%\""
+  - "SET PYTHON=%PYTHON%;"
   - C:\projects\julia\bin\julia -e "Pkg.build(\"PyCall\")"
 
 build_script:
