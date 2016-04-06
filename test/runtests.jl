@@ -3,6 +3,8 @@ using PyCall
 using Holidays
 using Compat
 
+import Base.Dates: Mon, Tue, Wed, Thu, Fri, Sat, Sun, dayofweek, tonext, toprev
+
 #Force load of python module in current directory
 unshift!(PyVector(pyimport("sys")["path"]), "")
 
@@ -23,13 +25,8 @@ regions = Dict(
 )
 
 # Set first and last date in loop
-#~ start_date = Date(1990, 1, 1)
-start_date = Date(2000, 1, 1)
-last_date = Date(2001, 1, 1)
-
-println("Start Date:",start_date)
-println("Last Date:",last_date)
-println("Regions:",regions)
+start_date = Date(1900, 1, 1)
+last_date = Date(2020, 1, 1)
 
 function day_names_equal(x, y)
     if isa(x, AbstractString) && isa(y, AbstractString)
@@ -54,11 +51,11 @@ function expected_difference(country, province, date, python_name, julia_name)
     end
 end
 
-function compare_holidays(country, province)
+function compare_holidays(country, province, observed)
     success = true
 
-    dates = holiday_cache(country=country, region=province, years=[2016])
-    pyholiday.load(country, province)
+    dates = holiday_cache(country=country, region=province, observed=observed, expand=true, years=[2016])
+    pyholiday.load(country, province, observed, true)
 
     date = start_date
     x = 0
@@ -77,6 +74,8 @@ function compare_holidays(country, province)
                     println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
                     success = false
                 end
+            #elseif isa(x, AbstractString) && isa(y, AbstractString)
+            #    println("       Success on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
             end
 
             date = date + Dates.Day(1)
@@ -102,11 +101,16 @@ function compare_holidays(country, province)
 end
 
 function loop_regions()
+    println("Looping the following regions:", regions)
+    println("Start Date:",start_date)
+    println("Last Date:",last_date)
+
     for (country, provinces) in regions
         println("Testing ",country)
         for province in provinces
             println("   Country: ",country, ", Province: ",province)
-            @test compare_holidays(country, province)
+            @test compare_holidays(country, province, true)
+            @test compare_holidays(country, province, false)
         end
     end
 end
@@ -180,10 +184,48 @@ function test_easter()
         end
     end
 
+    println("Easter passed")
     return success
+end
+
+function test_date_functions()
+    ## Test 1: Adding mondays to monday
+    date = Date(1990)
+    #This should be a monday, testing just in case.
+    @test dayofweek(date) == Mon
+    # This should resolve to the same date
+    next_monday = Holidays.add_day(date, Mon, 1)
+    @test next_monday - date == Base.Dates.Day(0)
+    #If count is 1, goes ahead a week
+    next_week_monday = Holidays.add_day(date, Mon, 2)
+    @test next_week_monday - date == Base.Dates.Day(7)
+
+    ## Test 2: Subtracting mondays from monday
+    # This should resolve to the same date
+    prev_monday = Holidays.sub_day(date, Mon, 1)
+    @test date - prev_monday == Base.Dates.Day(0)
+    #If count is 2, goes back a week
+    prev_week_monday = Holidays.sub_day(date, Mon, 2)
+    @test date - prev_week_monday == Base.Dates.Day(7)
+
+    ## Test 3: Adding tuesdays to monday
+    next_tuesday = Holidays.add_day(date, Tue, 1)
+    @test next_tuesday - date == Base.Dates.Day(1)
+    #If count is 2, goes ahead a week and a day
+    next_week_tuesday = Holidays.add_day(date, Tue, 2)
+    @test next_week_tuesday - date == Base.Dates.Day(8)
+
+    ## Test 2: Subtracting tuesdays from monday
+    # This should resolve to the same date
+    prev_tuesday = Holidays.sub_day(date, Tue, 1)
+    @test date - prev_tuesday == Base.Dates.Day(6)
+    # If count is 2, goes back another week
+    prev_week_tuesday = Holidays.sub_day(date, Tue, 2)
+    @test date - prev_week_tuesday == Base.Dates.Day(13)
+
+    println("add_day and sub_day passed")
 end
 
 loop_regions()
 @test test_easter()
-
-
+test_date_functions()
