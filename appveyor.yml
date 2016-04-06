@@ -20,6 +20,16 @@ notifications:
     on_build_status_changed: false
 
 install:
+  #### Install Julia
+  # Download most recent Julia Windows binary
+  - ps: (new-object net.webclient).DownloadFile(
+        $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
+        "C:\projects\julia-binary.exe")
+
+  # Run installer silently, output to C:\projects\julia
+  - C:\projects\julia-binary.exe /S /D=C:\projects\julia
+
+  #### Install Python
   # Set up python
   - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
 
@@ -34,15 +44,10 @@ install:
 
   # Install requires python libraries
   - "pip install --user holidays"
-  - "pip install --user six"
 
-  # Download most recent Julia Windows binary
-  - ps: (new-object net.webclient).DownloadFile(
-        $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
-        "C:\projects\julia-binary.exe")
-
-  # Run installer silently, output to C:\projects\julia
-  - C:\projects\julia-binary.exe /S /D=C:\projects\julia
+  # PyCall will not be able to find the new python unless we rebuild it with the correct path.
+  - "ENV[\"PYTHON\"] = \"%PYTHON%\""
+  - C:\projects\julia\bin\julia -e "Pkg.build(\"PyCall\")"
 
 build_script:
   # Need to convert from shallow to complete for Pkg.clone to work
