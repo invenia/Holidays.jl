@@ -1,6 +1,9 @@
 # Holidays.jl
 
 [![Build Status](https://travis-ci.org/invenia/Holidays.jl.svg?branch=master)](https://travis-ci.org/invenia/Holidays.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/4ocp44ti3qibt7kr?svg=true)](https://ci.appveyor.com/project/akrasian/holidays-jl)
+[![Coverage Status](https://coveralls.io/repos/github/invenia/Holidays.jl/badge.svg?branch=master)](https://coveralls.io/github/invenia/Holidays.jl?branch=master)
+[![codecov.io](https://codecov.io/github/invenia/Holidays.jl/coverage.svg?branch=master)](https://codecov.io/github/invenia/Holidays.jl?branch=master)
 
 Julia library for handling holidays
 

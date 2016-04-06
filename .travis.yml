@@ -15,4 +15,5 @@ script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
     - julia --check-bounds=yes --color=yes -e 'Pkg.clone(pwd()); Pkg.build("Holidays"); Pkg.test("Holidays"; coverage=true)'
 after_success:
+    - julia -e 'cd(Pkg.dir("Holidays")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
     - julia -e 'cd(Pkg.dir("Holidays")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'

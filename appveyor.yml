@@ -1,9 +1,13 @@
 environment:
-  matrix:
-  - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
-  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
-  - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
-  - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
+    global:
+        PYTHON: "C:\\Python27"
+        PYTHON_VERSION: "2.7.x"
+        PYTHON_ARCH: "32"
+    matrix:
+        -   JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
+        -   JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
+        -   JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
+        -   JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
 
 branches:
   only:
@@ -16,15 +20,32 @@ notifications:
     on_build_status_changed: false
 
 install:
-# Download most recent Julia Windows binary
+  # Set up python
+  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
+
+  # Prepend newly installed Python to the PATH of this build (this cannot be
+  # done from inside the powershell script as it would require to restart
+  # the parent CMD process).
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Upgrade to the latest version of pip to avoid it displaying warnings
+  # about it being out of date.
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+
+  # Install requires python libraries
+  - "pip install --user holidays"
+  - "pip install --user six"
+
+  # Download most recent Julia Windows binary
   - ps: (new-object net.webclient).DownloadFile(
         $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
         "C:\projects\julia-binary.exe")
-# Run installer silently, output to C:\projects\julia
+
+  # Run installer silently, output to C:\projects\julia
   - C:\projects\julia-binary.exe /S /D=C:\projects\julia
 
 build_script:
-# Need to convert from shallow to complete for Pkg.clone to work
+  # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia -e "versioninfo();
       Pkg.clone(pwd(), \"Holidays\"); Pkg.build(\"Holidays\")"
