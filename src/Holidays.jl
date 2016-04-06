@@ -1,7 +1,9 @@
-VERSION >= v"0.4-" && __precompile__()
+__precompile__()
 
 module Holidays
-export HolidayBase, countryRegions, holidayCache, dayName
+export HolidayBase, country_regions, holiday_cache, day_name!
+
+import Base.Dates: Mon, Tue, Wed, Thu, Fri, Sat, Sun, dayofweek, tonext, toprev
 
 # Credits:
 # This program closely borrows the logic for calculating most holidays from
@@ -9,12 +11,7 @@ export HolidayBase, countryRegions, holidayCache, dayName
 # Calculating easter is done using a julia port of IanTaylorEasterJscr(year) from
 # https://en.wikipedia.org/wiki/Computus#Algorithms
 
-# Abbreviations to reduce clutter on common functions / constants
-const (Mon, Tue, Wed, Thu, Fri, Sat, Sun) = (Dates.Mon, Dates.Tue, Dates.Wed, Dates.Thu, Dates.Fri, Dates.Sat, Dates.Sun)
 const WEEKEND = [Sat, Sun]
-const dayofweek = Dates.dayofweek
-const tonext = Dates.tonext
-const toprev = Dates.toprev
 
 const regions = Dict(
     "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
@@ -25,7 +22,6 @@ const regions = Dict(
     "AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"],
     "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
 )
-
 
 """
 `HolidayBase`: stores cached information about holidays to speed up future lookups,
@@ -53,7 +49,7 @@ end
 
 
 """
-`subDay(date::Date, weekday::Int, count::Int)`: counts backwards from the given date one
+`sub_day(date::Date, weekday::Int, count::Int)`: counts backwards from the given date one
 week at a time, and returns a date `count` weeks in the past where the day of week == weekday.
 If the day of week of the start date is the same as the specified weekday, this will
 count back one week less.
@@ -61,7 +57,7 @@ count back one week less.
 Returns:
 - `Date`: the resulting date after subtraction of `count` weeks.
 """
-function subDay(date::Date, weekday::Int, count::Int)
+function sub_day(date::Date, weekday::Int, count::Int)
     if dayofweek(date) == weekday
         count = count -1
     end
@@ -75,7 +71,7 @@ end
 
 
 """
-`addDay(date::Date, weekday::Int, count::Int)`: counts forwards from the given date one
+`add_day(date::Date, weekday::Int, count::Int)`: counts forwards from the given date one
 week at a time, and returns a date `count` weeks in the future where the day of week == weekday.
 If the day of week of the start date is the same as the specified weekday, this will
 count forwards one week less.
@@ -83,7 +79,7 @@ count forwards one week less.
 Returns:
 - `Date`: the resulting date after addition of `count` weeks.
 """
-function addDay(date::Date, weekday::Int, count::Int)
+function add_day(date::Date, weekday::Int, count::Int)
     if dayofweek(date) == weekday
         count = count -1
     end
@@ -153,8 +149,8 @@ function title(holidays::Dict{Date,AbstractString}, date::Date, day::AbstractStr
 end
 
 """
-`populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
-for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year
+`populate_ca!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year
 and region. For canada, regions are provinces / territories.
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
 another date, a seperate entry will be created for the observed date.
@@ -162,7 +158,7 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_ca!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # New Year's Day
     if year >= 1867
         name = "New Year's Day"
@@ -186,26 +182,23 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Islander Day
     if region == "PE" && year >= 2010
-        # third monday of february
-        title(days, addDay(Date(year, 2), Mon, 3) , "Islander Day")
-
+        title(days, add_day(Date(year, 2), Mon, 3) , "Islander Day")
     elseif region == "PE" && year == 2009
-        # 2nd monday of february
-        title(days, addDay(Date(year, 2), Mon, 2) , "Islander Day")
+        title(days, add_day(Date(year, 2), Mon, 2) , "Islander Day")
     end
 
     # Family Day / Louis Riel Day (MB)
     feb1 = Date(year, 2, 1)
-    if region in ["AB", "SK", "ON"] && year >= 2008
-        title(days, addDay(feb1, Mon, 3) , "Family Day")
-    elseif region in ["AB", "SK"] && year >= 2007
-        title(days, addDay(feb1, Mon, 3) , "Family Day")
+    if region in ("AB", "SK", "ON") && year >= 2008
+        title(days, add_day(feb1, Mon, 3) , "Family Day")
+    elseif region in ("AB", "SK") && year >= 2007
+        title(days, add_day(feb1, Mon, 3) , "Family Day")
     elseif region == "AB" && year >= 1990
-        title(days, addDay(feb1, Mon, 3) , "Family Day")
+        title(days, add_day(feb1, Mon, 3) , "Family Day")
     elseif region == "BC" && year >= 2013
-        title(days, addDay(feb1, Mon, 2) , "Family Day")
+        title(days, add_day(feb1, Mon, 2) , "Family Day")
     elseif region == "MB" && year >= 2008
-        title(days, addDay(feb1, Mon, 3) , "Louis Riel Day")
+        title(days, add_day(feb1, Mon, 3) , "Louis Riel Day")
     end
 
     # St. Patrick's Day
@@ -228,19 +221,17 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
         # 4/26 is the Monday closer to 4/23 in 2010
         # but the holiday was observed on 4/19? Crazy Newfies!
         title(days, Date(2010, 4, 19), "St. George's Day")
-
     elseif region == "NL" && year >= 1990
         title(days, nearest(Date(year, 4, 23), Mon), "St. George's Day")
     end
 
-    # Victoria Day / National Patriotes Day (QC)
-    if !(region in ["NB", "NS", "PE", "NL", "QC"]) && year >= 1953
+    # Victoria Day / National Patriots' Day (QC)
+    if !(region in ("NB", "NS", "PE", "NL", "QC")) && year >= 1953
         date = toprev(Date(year, 5, 24), Mon; same=true)
         title(days, date, "Victoria Day")
-
     elseif region == "QC" && year >= 1953
         date = toprev(Date(year, 5, 24), Mon; same=true)
-        title(days, date, "National Patriotes Day")
+        title(days, date, "National Patriots' Day")
     end
 
     # National Aboriginal Day
@@ -261,7 +252,7 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
         title(days,  nearest(Date(year, 6, 24), Mon) , "Discovery Day")
 
     elseif region == "YU" && year >= 1912
-        title(days, addDay(Date(year, 8, 1), Mon, 3) , "Discovery Day")
+        title(days, add_day(Date(year, 8, 1), Mon, 3) , "Discovery Day")
     end
 
     # Canada Day / Memorial Day (NL)
@@ -272,12 +263,11 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
         if observed && dayofweek(date) in WEEKEND
             title(days, tonext(date, Mon; same=true), name * " (Observed)")
         end
-
     elseif year >= 1867
         name = "Memorial Day"
         date = Date(year, 7, 1)
-
         title(days, date, name)
+
         if observed && dayofweek(date) in WEEKEND
             title(days, tonext(date, Mon; same=true), name * " (Observed)")
         end
@@ -294,9 +284,8 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 
     # Civic Holiday / British Columbia Day
-    if region in ["SK", "ON", "MB", "NT"] && year >= 1900
+    if region in ("SK", "ON", "MB", "NT") && year >= 1900
         title(days, tonext(Date(year, 8, 1), Mon; same=true), "Civic Holiday")
-
     elseif region == "BC" && year >= 1974
         title(days, tonext(Date(year, 8, 1), Mon; same=true), "British Columbia Day")
     end
@@ -307,17 +296,16 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 
     # Thanksgiving
-    if !(region in ["NB", "NS", "PE", "NL"]) && year >= 1931
-        title(days, addDay(Date(year, 10, 1), Mon, 2) , "Thanksgiving")
+    if !(region in ("NB", "NS", "PE", "NL")) && year >= 1931
+        title(days, add_day(Date(year, 10, 1), Mon, 2) , "Thanksgiving")
     end
 
      # Remembrance Day
     name = "Remembrance Day"
-    provinces = ["ON", "QC", "NS", "NL", "NT", "PE", "SK"]
-    if ! (region in provinces) && year >= 1931
+    provinces = ("ON", "QC", "NS", "NL", "NT", "PE", "SK")
+    if !(region in provinces) && year >= 1931
         title(days, Date(year, 11, 11), name)
-
-    elseif region in ["NS", "NL", "NT", "PE", "SK"] && year >= 1931
+    elseif region in ("NS", "NL", "NT", "PE", "SK") && year >= 1931
         title(days, Date(year, 11, 11), name)
         if observed && dayofweek(Date(year, 11, 11)) == Sun
             name = name * " (Observed)"
@@ -330,7 +318,6 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
         title(days, Date(year, 12, 25), "Christmas Day")
         if observed && dayofweek(Date(year, 12, 25)) == Sat
             title(days, Date(year, 12, 24), "Christmas Day (Observed)")
-
         elseif observed && dayofweek(Date(year, 12, 25)) == Sun
             title(days, Date(year, 12, 26), "Christmas Day (Observed)")
         end
@@ -342,7 +329,6 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
         name_observed = name * " (Observed)"
         if observed && dayofweek(Date(year, 12, 26)) in WEEKEND
             title(days, tonext(Date(year, 12, 26), Mon; same=true), name_observed)
-
         elseif observed && dayofweek(Date(year, 12, 26)) == Mon
             title(days, Date(year, 12, 27), name_observed)
         else
@@ -352,8 +338,8 @@ function populate_ca(days::Dict{Date,AbstractString}, region::AbstractString, ob
 end
 
 """
-`populate_us(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
-for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year
+`populate_us!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year
 and region. For the USA, regions are states.
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
 another date, a seperate entry will be created for the observed date.
@@ -361,7 +347,7 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_us!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # New Year's Day
     if year > 1870
         name = "New Year's Day"
@@ -398,14 +384,13 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     if region == "VA" && year >= 2000
         # Third monday, then back to previous friday.
         date = Date(year, 1, 1)
-        date = addDay(date, Mon, 3)
-        date = subDay(date, Fri, 1)
+        date = add_day(date, Mon, 3)
+        date = sub_day(date, Fri, 1)
         title(days, date, name)
     elseif region == "VA" && year >= 1983
         date = Date(year, 1, 1)
-        date = addDay(date, Mon, 3)
+        date = add_day(date, Mon, 3)
         title(days, date, name)
-
     elseif region == "VA" && year >= 1889
         title(days, Date(year, 1, 19), name)
     end
@@ -442,7 +427,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
         end
 
         if region != "GA" || year < 2012
-            title(days, addDay(Date(year), Mon, 3), name)
+            title(days, add_day(Date(year), Mon, 3), name)
         end
     end
 
@@ -481,7 +466,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     if !(region in ("DE", "FL", "GA", "NM", "PR"))
         if year > 1970
-            title(days, addDay(Date(year, 2), Mon, 3), name)
+            title(days, add_day(Date(year, 2), Mon, 3), name)
         elseif year >= 1879
             title(days, Date(year, 2, 22), name)
         end
@@ -492,7 +477,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
             title(days, Date(year, 12, 26), name)
         end
     elseif region in ("PR", "VI")
-        title(days, addDay(Date(year, 2), Mon, 3), name)
+        title(days, add_day(Date(year, 2), Mon, 3), name)
     end
 
     # Mardi Gras
@@ -502,12 +487,12 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Guam Discovery Day
     if region == "GU" && year >= 1970
-        title(days, addDay(Date(year, 3, 1), Mon, 1), "Guam Discovery Day")
+        title(days, add_day(Date(year, 3, 1), Mon, 1), "Guam Discovery Day")
     end
 
     # Casimir Pulaski Day
     if region == "IL" && year >= 1978
-        title(days, addDay(Date(year, 3), Mon, 1), "Casimir Pulaski Day")
+        title(days, add_day(Date(year, 3), Mon, 1), "Casimir Pulaski Day")
     end
 
     # Texas Independence Day
@@ -517,7 +502,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Town Meeting Day
     if region == "VT" && year >= 1800
-        title(days, addDay(Date(year, 3), Tue, 1), "Town Meeting Day")
+        title(days, add_day(Date(year, 3), Tue, 1), "Town Meeting Day")
     end
 
     # Evacuation Day
@@ -525,7 +510,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
         name = "Evacuation Day"
         title(days, Date(year, 3, 17), name)
         if dayofweek(Date(year, 3, 17)) in WEEKEND
-            title(days, addDay(Date(year, 3, 17), Mon, 1), name * " (Observed)")
+            title(days, add_day(Date(year, 3, 17), Mon, 1), name * " (Observed)")
         end
     end
 
@@ -552,7 +537,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     name = "Steward's Day"
     if region == "AK" && year >= 1955
         date = Date(year, 4, 1) + Dates.Day(-1)
-        title(days, subDay(date, Mon, 1), name)
+        title(days, sub_day(date, Mon, 1), name)
     elseif region == "AK" && year >= 1918
         title(days, Date(year, 3, 30), name)
     end
@@ -586,32 +571,31 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Patriots' Day
     if region in ("ME", "MA") && year >= 1969
-        title(days, addDay(Date(year, 4, 1), Mon, 3), "Patriots' Day")
+        title(days, add_day(Date(year, 4, 1), Mon, 3), "Patriots' Day")
     elseif region in ("ME", "MA") && year >= 1894
         title(days, Date(year, 4, 19), "Patriots' Day")
     end
 
     # Holy Thursday
     if region == "VI"
-        title(days, subDay(easter(year), Thu, 1), "Holy Thursday")
+        title(days, sub_day(easter(year), Thu, 1), "Holy Thursday")
     end
 
     # Good Friday
     if region in ("CT", "DE", "GU", "IN", "KY", "LA",
                   "NJ", "NC", "PR", "TN", "TX", "VI")
-
-        title(days, subDay(easter(year), Fri, 1), "Good Friday")
+        title(days, sub_day(easter(year), Fri, 1), "Good Friday")
     end
 
     # Easter Monday
     if region == "VI"
-        title(days, addDay(easter(year), Mon, 1), "Easter Monday")
+        title(days, add_day(easter(year), Mon, 1), "Easter Monday")
     end
 
     # Confederate Memorial Day
     name = "Confederate Memorial Day"
     if region in ("AL", "GA", "MS", "SC") && year >= 1866
-        title(days, addDay(Date(year, 4), Mon, 4), name)
+        title(days, add_day(Date(year, 4), Mon, 4), name)
     elseif region == "TX" && year >= 1931
         title(days, Date(year, 1, 19), name)
     end
@@ -623,15 +607,14 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Arbor Day
     if region == "NE" && year >= 1989
-        title(days, subDay(Date(year, 4, 30), Fri, 1), "Arbor Day")
+        title(days, sub_day(Date(year, 4, 30), Fri, 1), "Arbor Day")
     elseif region == "NE" && year >= 1875
         title(days, Date(year, 4, 22), "Arbor Day")
     end
 
     # Primary Election Day
-    if region == "IN" && ((year >= 2006 && year % 2 == 0) ||
-                           year >= 2015)
-        date = addDay(Date(year, 5), Mon, 1)
+    if region == "IN" && ((year >= 2006 && year % 2 == 0) || year >= 2015)
+        date = add_day(Date(year, 5), Mon, 1)
         title(days, date + Dates.Day(1), "Primary Election Day")
     end
 
@@ -648,7 +631,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Memorial Day
     if year > 1970
-        title(days, subDay(Date(year, 5, 31), Mon, 1), "Memorial Day")
+        title(days, sub_day(Date(year, 5, 31), Mon, 1), "Memorial Day")
     elseif year >= 1888
         title(days, Date(year, 5, 30), "Memorial Day")
     end
@@ -656,7 +639,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Jefferson Davis Birthday
     name = "Jefferson Davis Birthday"
     if region == "AL" && year >= 1890
-        title(days, addDay(Date(year, 6), Mon, 1), name)
+        title(days, add_day(Date(year, 6), Mon, 1), name)
     end
 
     # Kamehameha Day
@@ -729,12 +712,12 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Victory Day
     if region == "RI" && year >= 1948
-        title(days, addDay(Date(year, 8), Mon, 2), "Victory Day")
+        title(days, add_day(Date(year, 8), Mon, 2), "Victory Day")
     end
 
     # Statehood Day (Hawaii)
     if region == "HI" && year >= 1959
-        title(days, addDay(Date(year, 8), Fri, 3), "Statehood Day")
+        title(days, add_day(Date(year, 8), Fri, 3), "Statehood Day")
     end
 
     # Bennington Battle Day
@@ -755,11 +738,11 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     # Labor Day
     if year >= 1894
-        title(days, addDay(Date(year, 9, 1), Mon, 1), "Labor Day")
+        title(days, add_day(Date(year, 9, 1), Mon, 1), "Labor Day")
     end
 
     # Columbus Day
-    if ! (region in ("AK", "DE", "FL", "HI", "NV"))
+    if !(region in ("AK", "DE", "FL", "HI", "NV"))
         if region == "SD"
             name = "Native American Day"
         elseif region == "VI"
@@ -769,7 +752,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
         end
 
         if year >= 1970
-            title(days, addDay(Date(year, 10), Mon, 2), name)
+            title(days, add_day(Date(year, 10), Mon, 2), name)
         elseif year >= 1937
             title(days, Date(year, 10, 12), name)
         end
@@ -790,7 +773,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
         date = Date(year, 10, 31)
         if year >= 2000
             # date += rd(weekday=FR(-1))
-            date = subDay(date, Fri, 1)
+            date = sub_day(date, Fri, 1)
         end
 
         title(days, date, "Nevada Day")
@@ -807,13 +790,11 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 
     # Election Day
-    if (region in ("DE", "HI", "IL", "IN", "LA",
-                        "MT", "NH", "NJ", "NY", "WV") &&
-                year >= 2008 && year % 2 == 0) ||
-            (region in ("IN", "NY") && year >= 2015)
+    if (region in ("DE", "HI", "IL", "IN", "LA", "MT", "NH", "NJ", "NY", "WV") &&
+                year >= 2008 && year % 2 == 0) || (region in ("IN", "NY") && year >= 2015)
 
         # date = Date(year, 11, 1) + rd(weekday=MO)
-        date = addDay(Date(year, 11), Mon, 1)
+        date = add_day(Date(year, 11), Mon, 1)
         title(days, date + Dates.Day(1), "Election Day")
     end
 
@@ -831,7 +812,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     if 1978 > year > 1970
         # title(days, Date(year, 10, 1) + rd(weekday=MO(+4)), name)
-        title(days, addDay(Date(year, 10), Mon, 4), name)
+        title(days, add_day(Date(year, 10), Mon, 4), name)
     elseif year >= 1938
         title(days, Date(year, 11, 11), name)
 
@@ -853,7 +834,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Thanksgiving
     if year > 1870
         # title(days, Date(year, 11, 1) + rd(weekday=TH(+4)), "Thanksgiving")
-        title(days, addDay(Date(year, 11), Thu, 4), "Thanksgiving")
+        title(days, add_day(Date(year, 11), Thu, 4), "Thanksgiving")
     end
 
     # Day After Thanksgiving
@@ -863,8 +844,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Family Day
     # New Mexico Presidents' Day
     if (region in ("DE", "FL", "NH", "NC", "OK", "TX", "WV") && year >= 1975) ||
-            (region == "IN" && year >= 2010) ||
-            (region == "MD" && year >= 2008) ||
+            (region == "IN" && year >= 2010) || (region == "MD" && year >= 2008) ||
             region in ("NV", "NM")
 
         if region in ("DE", "NH", "NC", "OK", "WV")
@@ -882,7 +862,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
         end
 
         # date = Date(year, 11, 1) + rd(weekday=TH(+4))
-        date = addDay(Date(year, 11, 1), Thu, 4)
+        date = add_day(Date(year, 11, 1), Thu, 4)
         # title(days, date + rd(days=+1), name)
         title(days, date + Dates.Day(1), name)
     end
@@ -891,7 +871,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     if region == "GA" && year >= 2012
         name = "Robert E. Lee's Birthday"
         # title(days, Date(year, 11, 29) + rd(weekday=FR(-1)), name)
-        title(days, subDay( Date(year, 11, 29), Fri, 1), name)
+        title(days, sub_day( Date(year, 11, 29), Fri, 1), name)
     end
 
     # Lady of Camarin Day
@@ -900,10 +880,8 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 
     # Christmas Eve
-    if region == "AS" ||
-            (region in ("KS", "MI", "NC") && year >= 2013) ||
-            (region == "TX" && year >= 1981) ||
-            (region == "WI" && year >= 2012)
+    if region == "AS" || (region in ("KS", "MI", "NC") && year >= 2013) ||
+            (region == "TX" && year >= 1981) || (region == "WI" && year >= 2012)
 
         name = "Christmas Eve"
         title(days, Date(year, 12, 24), name)
@@ -912,7 +890,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
         if observed && dayofweek(Date(year, 12, 24)) == Fri
             title(days, Date(year, 12, 23), name)
         elseif observed && dayofweek(Date(year, 12, 24)) in WEEKEND
-            title(days, subDay(Date(year, 12, 24), Fri, 1), name)
+            title(days, sub_day(Date(year, 12, 24), Fri, 1), name)
         end
     end
 
@@ -934,9 +912,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
         name = name * " (Observed)"
         # If on Saturday or Sunday, observed on Monday
         if observed && dayofweek(Date(year, 12, 26)) in WEEKEND
-            title(days, addDay(Date(year, 12, 26), Mon, 1), name)
-
-        # If on Monday, observed on Tuesday
+            title(days, add_day(Date(year, 12, 26), Mon, 1), name)
         elseif observed && dayofweek(Date(year, 12, 26)) == Mon
             title(days, Date(year, 12, 27), name)
         end
@@ -947,9 +923,7 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
     end
 
     # New Year's Eve
-    if (region in ("KY", "MI") && year >= 2013) ||
-            (region == "WI" && year >= 2012)
-
+    if (region in ("KY", "MI") && year >= 2013) || (region == "WI" && year >= 2012)
         name = "New Year's Eve"
         title(days, Date(year, 12, 31), name)
         if observed && dayofweek(Date(year, 12, 31)) == Sat
@@ -959,8 +933,8 @@ function populate_us(days::Dict{Date,AbstractString}, region::AbstractString, ob
 end
 
 """
-`populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
-for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+`populate_mx!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 Mexico has no regions relevant for holiday calculation.
 
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
@@ -969,7 +943,7 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_mx!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # New Year's Day
     name = "Año Nuevo [New Year's Day]"
     title(days, Date(year, 1, 1), name)
@@ -978,7 +952,6 @@ function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, ob
     elseif observed && dayofweek(Date(year, 1, 1)) == Sat
         # Add Dec 31st from the previous year without triggering
         # the entire year to be added
-
         title(days, Date(year, 1, 1) + Dates.Day(-1), name * " (Observed)")
     end
     # The next year's observed New Year's Day can be in this year
@@ -992,7 +965,7 @@ function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, ob
     if 2006 >= year >= 1917
         title(days, Date(year, 2, 5), name)
     elseif year >= 2007
-        title(days, addDay(Date(year, 2, 1), Mon, 1), name)
+        title(days, add_day(Date(year, 2, 1), Mon, 1), name)
     end
 
     # Benito Juárez's birthday
@@ -1000,7 +973,7 @@ function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, ob
     if 2006 >= year >= 1917
         title(days, Date(year, 3, 21), name)
     elseif year >= 2007
-        title(days, addDay(Date(year, 3), Mon, 3), name)
+        title(days, add_day(Date(year, 3), Mon, 3), name)
     end
     # Labor Day
     if year >= 1923
@@ -1027,7 +1000,7 @@ function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, ob
     if 2006 >= year >= 1917
         title(days, Date(year, 11, 20), name)
     elseif year >= 2007
-        title(days, addDay(Date(year, 11, 1), Mon, 3), name)
+        title(days, add_day(Date(year, 11, 1), Mon, 3), name)
     end
 
     # Change of Federal Government
@@ -1039,7 +1012,6 @@ function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
         if observed && dayofweek(Date(year, 12, 1)) == Sat
             title(days, Date(year, 12, 1) + Dates.Day(-1), name * " (Observed)")
-
         elseif observed && dayofweek(Date(year, 12, 1)) == Sun
             title(days, Date(year, 12, 2), name * " (Observed)")
         end
@@ -1055,8 +1027,8 @@ function populate_mx(days::Dict{Date,AbstractString}, region::AbstractString, ob
 end
 
 """
-`populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
-for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+`populate_nz!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 For new zealand, regions are provinces.
 
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
@@ -1065,7 +1037,7 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_nz!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # Holidays to research:
     # Bank Holidays Act 1873
     # The Employment of Females Act 1873
@@ -1105,13 +1077,13 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
         feb6 = Date(year, 2, 6)
         title(days, feb6, name)
         if observed && year >= 2014 && dayofweek(feb6) in WEEKEND
-            title(days, addDay(feb6, Mon, 1), name * " (Observed)")
+            title(days, add_day(feb6, Mon, 1), name * " (Observed)")
         end
     end
 
     # Easter
-    title(days, subDay(easter(year), Fri, 1), "Good Friday")
-    title(days, addDay(easter(year), Mon, 1), "Easter Monday")
+    title(days, sub_day(easter(year), Fri, 1), "Good Friday")
+    title(days, add_day(easter(year), Mon, 1), "Easter Monday")
 
     # Anzac Day
     if year > 1920
@@ -1119,7 +1091,7 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
         apr25 = Date(year, 4, 25)
         title(days, apr25, name)
         if observed && year >= 2014 && dayofweek(apr25) in WEEKEND
-            title(days, addDay(apr25, Mon, 1), name * " (Observed)")
+            title(days, add_day(apr25, Mon, 1), name * " (Observed)")
         end
     end
 
@@ -1133,7 +1105,7 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
     if year == 1952
         title(days, Date(year, 6, 2), name) # Elizabeth II
     elseif year > 1937
-        title(days, addDay(Date(year, 6, 1), Mon, 1), name  ) # EII & GVI
+        title(days, add_day(Date(year, 6, 1), Mon, 1), name  ) # EII & GVI
     elseif year == 1937
         title(days, Date(year, 6, 9), name) # George VI
     elseif year == 1936
@@ -1148,9 +1120,9 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Labour Day
     name = "Labour Day"
     if year >= 1910
-        title(days, addDay(Date(year, 10, 1),Mon,4), name)
+        title(days, add_day(Date(year, 10, 1),Mon,4), name)
     elseif year > 1899
-        title(days, addDay(Date(year, 10, 1), Wed, 2), name)
+        title(days, add_day(Date(year, 10, 1), Wed, 2), name)
     end
 
     # Christmas Day
@@ -1180,15 +1152,13 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
         end
 
         title(days, nearest(date, Mon), name)
-
     elseif region in ("TKI", "Taranaki", "New Plymouth")
         name = "Taranaki Anniversary Day"
-        title(days, addDay(Date(year, 3, 1), Mon, 2), name)
-
+        title(days, add_day(Date(year, 3, 1), Mon, 2), name)
     elseif region in ("HKB", "Hawke's Bay")
         name = "Hawke's Bay Anniversary Day"
-        labour_day = addDay(Date(year, 10, 1), Mon, 4)
-        title(days, subDay(labour_day, Fri, 1), name)
+        labour_day = add_day(Date(year, 10, 1), Mon, 4)
+        title(days, sub_day(labour_day, Fri, 1), name)
 
     elseif region in ("WGN", "Wellington")
         name = "Wellington Anniversary Day"
@@ -1197,25 +1167,22 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
     elseif region in ("MBH", "Marlborough")
         name = "Marlborough Anniversary Day"
-        date = addDay(Date(year, 10, 1), Mon, 5)
+        date = add_day(Date(year, 10, 1), Mon, 5)
         title(days, date, name)
-
     elseif region in ("NSN", "Nelson")
         name = "Nelson Anniversary Day"
         feb1 = Date(year, 2, 1)
         title(days, nearest(feb1, Mon), name)
-
     elseif region in ("CAN", "Canterbury")
         name = "Canterbury Anniversary Day"
-        showday = addDay(Date(year, 11, 1), Tue, 1)
-        showday = addDay(showday, Fri, 2)
+        showday = add_day(Date(year, 11, 1), Tue, 1)
+        showday = add_day(showday, Fri, 2)
         title(days, showday, name)
 
     elseif region in ("STC", "South Canterbury")
         name = "South Canterbury Anniversary Day"
-        dominion_day = addDay(Date(year, 9, 1), Mon, 4)
+        dominion_day = add_day(Date(year, 9, 1), Mon, 4)
         title(days, dominion_day, name)
-
     elseif region in ("WTL", "Westland")
         name = "Westland Anniversary Day"
         dec1 = Date(year, 12, 1)
@@ -1225,26 +1192,23 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
         else
             title(days, nearest(dec1, Mon), name)
         end
-
     elseif region in ("OTA", "Otago")
         name = "Otago Anniversary Day"
         mar23 = Date(year, 3, 23)
         date = nearest(mar23, Mon)
 
-        if date == addDay(easter(year), Mon, 1) # Avoid Easter Monday
+        if date == add_day(easter(year), Mon, 1) # Avoid Easter Monday
             date = date + Dates.Day(1)
         end
         title(days, date, name)
-
     elseif region in ("STL", "Southland")
         name = "Southland Anniversary Day"
         jan17 = Date(year, 1, 17)
         if year > 2011
-            title(days, addDay(easter(year), Tue, 1), name)
+            title(days, add_day(easter(year), Tue, 1), name)
         else
             title(days, nearest(jan17, Mon), name)
         end
-
     elseif region in ("CIT", "Chatham Islands")
         name = "Chatham Islands Anniversary Day"
         nov30 = Date(year, 11, 30)
@@ -1253,8 +1217,8 @@ function populate_nz(days::Dict{Date,AbstractString}, region::AbstractString, ob
 end
 
 """
-`populate_au(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
-for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+`populate_au!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 For Australia, regions are provinces.
 
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
@@ -1263,7 +1227,7 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_au!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     # Holidays to research:
     # ACT:  Holidays Act 1958
     # NSW:  Public Holidays Act 2010
@@ -1281,7 +1245,7 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
     jan1 = Date(year, 1, 1)
     title(days, jan1, name)
     if observed && dayofweek(jan1) in WEEKEND
-        title(days, addDay(jan1, Mon, 1), name * " (Observed)")
+        title(days, add_day(jan1, Mon, 1), name * " (Observed)")
     end
 
     # Australia Day
@@ -1295,7 +1259,7 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
 
         title(days, jan26, name)
         if observed && year >= 1946 && dayofweek(jan26) in WEEKEND
-            title(days, addDay(jan26, Mon, 1), name * " (Observed)")
+            title(days, add_day(jan26, Mon, 1), name * " (Observed)")
         end
     elseif year >= 1888 && region != "SA"
         name = "Anniversary Day"
@@ -1307,28 +1271,28 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
         name = "Adelaide Cup"
         if year >= 2006
             # subject to proclamation ?!?!
-            title(days, addDay(Date(year, 3, 1), Mon, 2), name)
+            title(days, add_day(Date(year, 3, 1), Mon, 2), name)
         else
-            title(days, addDay(Date(year, 3, 1), Mon, 3), name)
+            title(days, add_day(Date(year, 3, 1), Mon, 3), name)
         end
     end
 
     # Canberra Day
     if region == "ACT"
         name = "Canberra Day"
-        title(days, addDay(Date(year, 3, 1), Mon, 1), name)
+        title(days, add_day(Date(year, 3, 1), Mon, 1), name)
     end
 
     # Easter
-    title(days, subDay(easter(year), Fri, 1), "Good Friday")
+    title(days, sub_day(easter(year), Fri, 1), "Good Friday")
     if region in ("ACT", "NSW", "NT", "QLD", "SA", "VIC")
-        title(days, subDay(easter(year), Sat, 1), "Easter Saturday")
+        title(days, sub_day(easter(year), Sat, 1), "Easter Saturday")
     end
 
     if region == "NSW"
         title(days, easter(year), "Easter Sunday")
     end
-    title(days, addDay(easter(year), Mon, 1), "Easter Monday")
+    title(days, add_day(easter(year), Mon, 1), "Easter Monday")
 
     # Anzac Day
     if year > 1920
@@ -1337,9 +1301,9 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
         title(days, apr25, name)
         if observed
             if dayofweek(apr25) == Sat && region in ("WA", "NT")
-                title(days, addDay(apr25, Mon, 1), name * " (Observed)")
+                title(days, add_day(apr25, Mon, 1), name * " (Observed)")
             elseif dayofweek(apr25) == Sun && region in ("ACT", "QLD", "SA", "WA", "NT")
-                title(days, addDay(apr25, Mon, 1), name * " (Observed)")
+                title(days, add_day(apr25, Mon, 1), name * " (Observed)")
             end
         end
     end
@@ -1347,7 +1311,7 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Western Australia Day
     if region == "WA" && year > 1832
         name = year >= 2015? "Western Australia Day" : "Foundation Day"
-        title(days, addDay(Date(year, 6, 1), Mon, 1), name)
+        title(days, add_day(Date(year, 6, 1), Mon, 1), name)
     end
 
     # Sovereign's Birthday
@@ -1363,13 +1327,13 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
                 title(days, Date(year, 10, 1), name)
                 title(days, Date(year, 6, 11), "Queen's Diamond Jubilee")
             else
-                title(days, addDay(Date(year, 6, 1), Mon, 2), name)
+                title(days, add_day(Date(year, 6, 1), Mon, 2), name)
             end
         elseif region == "WA"
             # by proclamation ?!?!
-            title(days, subDay(Date(year, 10, 1), Mon, 1), name)
+            title(days, sub_day(Date(year, 10, 1), Mon, 1), name)
         else
-            title(days, addDay(Date(year, 6, 1), Mon, 2), name)
+            title(days, add_day(Date(year, 6, 1), Mon, 2), name)
         end
     elseif year > 1911
         title(days, Date(year, 6, 3), name) # George V
@@ -1380,36 +1344,36 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Picnic Day
     if region == "NT"
         name = "Picnic Day"
-        title(days, addDay(Date(year, 8, 1), Mon, 1), name)
+        title(days, add_day(Date(year, 8, 1), Mon, 1), name)
     end
 
     # Labour Day
     name = "Labour Day"
     if region in ("NSW", "ACT", "SA")
-        title(days, addDay(Date(year, 10, 1), Mon, 1), name)
+        title(days, add_day(Date(year, 10, 1), Mon, 1), name)
     elseif region == "WA"
-        title(days, addDay(Date(year, 3, 1), Mon, 1), name)
+        title(days, add_day(Date(year, 3, 1), Mon, 1), name)
     elseif region == "VIC"
-        title(days, addDay(Date(year, 3, 1), Mon, 2), name)
+        title(days, add_day(Date(year, 3, 1), Mon, 2), name)
     elseif region == "QLD"
         if 2013 <= year <= 2015
-            title(days, addDay(Date(year, 10, 1), Mon, 1), name)
+            title(days, add_day(Date(year, 10, 1), Mon, 1), name)
         else
-            title(days, addDay(Date(year, 5, 1), Mon, 1), name)
+            title(days, add_day(Date(year, 5, 1), Mon, 1), name)
         end
     elseif region == "NT"
         name = "May Day"
-        title(days, addDay(Date(year, 5, 1), Mon, 1), name)
+        title(days, add_day(Date(year, 5, 1), Mon, 1), name)
     elseif region == "TAS"
         name = "Eight Hours Day"
-        title(days, addDay(Date(year, 3, 1), Mon, 2), name)
+        title(days, add_day(Date(year, 3, 1), Mon, 2), name)
     end
 
     # Family & Community Day
     if region == "ACT"
         name = "Family & Community Day"
         if 2007 <= year <= 2009
-            title(days, addDay(Date(year, 11, 1), Tue, 1), name)
+            title(days, add_day(Date(year, 11, 1), Tue, 1), name)
         elseif year == 2010
             # first Monday of the September/October school holidays
             # moved to the second Monday if this falls on Labour day
@@ -1429,18 +1393,18 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
         elseif year == 2016
             title(days, Date(year, 9, 26), name)
         elseif 2017 <= year <= 2020
-            labour_day = addDay(Date(year, 10, 1), Mon, 1)
+            labour_day = add_day(Date(year, 10, 1), Mon, 1)
             if year == 2017
-                dt = addDay(Date(year, 9, 23), Mon, 1)
+                dt = add_day(Date(year, 9, 23), Mon, 1)
             elseif year == 2018
-                dt = addDay(Date(year, 9, 29), Mon, 1)
+                dt = add_day(Date(year, 9, 29), Mon, 1)
             elseif year == 2019
-                dt = addDay(Date(year, 9, 28), Mon, 1)
+                dt = add_day(Date(year, 9, 28), Mon, 1)
             elseif year == 2020
-                dt = addDay(Date(year, 9, 26), Mon, 1)
+                dt = add_day(Date(year, 9, 26), Mon, 1)
             end
             if dt == labour_day
-                dt = addDay(dt, Mon, 1)
+                dt = add_day(dt, Mon, 1)
             end
             title(days, Date(year, 9, 26), name)
         end
@@ -1449,7 +1413,7 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
     # Melbourne Cup
     if region == "VIC"
         name = "Melbourne Cup"
-        title(days, addDay(Date(year, 11, 1), Tue, 1), name)
+        title(days, add_day(Date(year, 11, 1), Tue, 1), name)
     end
 
     # Christmas Day
@@ -1475,8 +1439,8 @@ function populate_au(days::Dict{Date,AbstractString}, region::AbstractString, ob
 end
 
 """
-`populate_at(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
-for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+`populate_at!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 For Austria, regions are provinces.
 
 Conflicting holidays are not observed on different dates in Austria, so the value of observed
@@ -1485,10 +1449,10 @@ has no effect.
 Returns:
 - Nothing
 """
-function populate_at(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_at!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     title(days, Date(year, 1, 1), "Neujahr")
     title(days, Date(year, 1, 6), "Heilige Drei Könige")
-    title(days, addDay(easter(year), Mon, 1), "Ostermontag")
+    title(days, add_day(easter(year), Mon, 1), "Ostermontag")
     title(days, Date(year, 5, 1), "Staatsfeiertag")
 
     title(days, easter(year) + Dates.Day(39), "Christi Himmelfahrt")
@@ -1510,9 +1474,9 @@ function populate_at(days::Dict{Date,AbstractString}, region::AbstractString, ob
 end
 
 """
-`populate_de(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+`populate_de!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
 
-for each holiday, sets days[holidayDate] = holidayName, for all holidays in the given year.
+for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 For Germany, regions are provinces.
 
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
@@ -1555,7 +1519,7 @@ are some weired edge cases:
       municipalities in Saxony (SN) and Thuringia (TH). We exclude it from
       both provinces.
 """
-function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_de!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
     if year <= 1989
         return
     end
@@ -1576,9 +1540,7 @@ function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, ob
         end
 
         title(days, easter(year) + Dates.Day(1), "Ostermontag")
-
         title(days, Date(year, 5, 1), "Maifeiertag")
-
         title(days, easter(year) + Dates.Day(39), "Christi Himmelfahrt")
 
         if region == "BB"
@@ -1604,7 +1566,6 @@ function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, ob
         title(days, Date(year, 10, 31), "Reformationstag")
     end
 
-
     if region in ("BW", "BY", "NW", "RP", "SL")
         title(days, Date(year, 11, 1), "Allerheiligen")
     end
@@ -1612,7 +1573,6 @@ function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, ob
     if region == "SN"
         # can be calculated as "last wednesday before year-11-23" which is
         # why we need to go back two wednesdays if year-11-23 happens to be a wednesday
-
         date = Dates.toprev(x->Dates.dayofweek(x) == Wed, Date(year, 11, 23))
         title(days, date, "Buß- und Bettag")
     end
@@ -1621,18 +1581,18 @@ function populate_de(days::Dict{Date,AbstractString}, region::AbstractString, ob
     title(days, Date(year, 12, 26), "Zweiter Weihnachtstag")
 end
 
-populators =  Dict{AbstractString, Function}(
-    "US"=>populate_us,
-    "CA"=>populate_ca,
-    "MX"=>populate_mx,
-    "NZ"=>populate_nz,
-    "AU"=>populate_au,
-    "AT"=>populate_at,
-    "DE"=>populate_de
+const populators =  Dict{AbstractString, Function}(
+    "US"=>populate_us!,
+    "CA"=>populate_ca!,
+    "MX"=>populate_mx!,
+    "NZ"=>populate_nz!,
+    "AU"=>populate_au!,
+    "AT"=>populate_at!,
+    "DE"=>populate_de!
 )
 
 """
-`holidayCache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])`:
+`holiday_cache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])`:
 
 Populates holiday cache for the given years, country, and region. If observed is true, then
 alternative observed dates will be set as well. If expand is true, then whenever a lookup
@@ -1641,13 +1601,12 @@ is made for a non cached date, that year of holidays will be populated in the ca
 Returns:
 - `HolidayBase`: The cache for future calls to lookup dates.
 """
-function holidayCache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])
+function holiday_cache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])
     if !haskey(populators, country)
-        throw(ArgumentError("Invalid Country: " * country * ", valid countries are " * string(keys(populators))))
+        throw(ArgumentError("Invalid country \"$country\"; valid countries are ($(join(keys(populators))))"))
     end
 
     years = Set(years)
-
     holidays = Dict{Date,AbstractString}()
     populate = populators[country]
 
@@ -1660,17 +1619,16 @@ function holidayCache(; country::AbstractString="CA", region::AbstractString="MB
 end
 
 """
-`dayName(date::Date, holidays::HolidayBase)`: Find corresponding holiday names for a date. If
+`day_name!(date::Date, holidays::HolidayBase)`: Find corresponding holiday names for a date. If
 the given date is in the holiday cache this is a simple lookup. If it is not in cache, and
 expand is enabled, then the new year will be populated. Otherwise this will just return nothing.
 
 Returns:
 - `AbstractString`: Holiday name for the given date, or Void if there is no corresponding holiday name.
 """
-function dayName(date::Date, holidays::HolidayBase)
+function day_name!(date::Date, holidays::HolidayBase)
     if !(Dates.year(date) in holidays.years)
         populate = populators[holidays.country]
-
         populate(holidays.dates, holidays.region, holidays.observed, Dates.year(date))
         push!(holidays.years, Dates.year(date))
     end
@@ -1683,12 +1641,12 @@ function dayName(date::Date, holidays::HolidayBase)
 end
 
 """
-`countryRegions(country::AbstractString)`: For lookup of regions in a country
+`country_regions(country::AbstractString)`: For lookup of regions in a country
 
 Returns:
 - `Array{AbstractString,N}`: Recognized regions within a given country
 """
-function countryRegions(country::AbstractString)
+function country_regions(country::AbstractString)
     if haskey(regions, country)
         return regions[country]
     else

@@ -6,20 +6,15 @@ Julia library for handling holidays
 
 ## Example Usage
 
+    using Holidays
     country = "CA"
-    println(Holidays.countryRegions(country))
+    println(country_regions(country))
     # --> ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
-    
+
     province = "MB"
-    dates = Holidays.Cache(country=country, region=province)
-    println(dayName(dates, Date(2011, 1, 1))
+    dates = holiday_cache(country=country, region=province)
+    println(day_name(Date(2011, 1, 1), dates))
     # --> "New Year's Day"
-    
-## Install
-
-The library will need to be on Julia's search path, which can be done by creating a symlink, EX:
-
-`~/.julia/v$julia_version/Holidays -> /path/to/Holidays.jl`
 
 ## Available Countries
 
@@ -41,25 +36,25 @@ All currently available country codes and their correspondign lists of regions a
 
 ## API
 
-Presently, there are only a few functions exported by this module by default. countryRegions, holidayCache, and dayName
+Presently, there are only a few functions exported by this module by default. country_regions, holiday_cache, and day_name
 
-*    `holidayCache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])`:
-    
+*    `holiday_cache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])`:
+
     Populates holiday cache for the given years, country, and region. If observed is true, then
     alternative observed dates will be set as well. If expand is true, then whenever a lookup
     is made for a non cached date, that year of holidays will be populated in the cache.
-    
+
     Returns:
     - `HolidayBase`: The cache for future calls to lookup dates.
 
-*   `dayName(date::Date, holidays::HolidayBase)`: Find corresponding holiday names for a date. If
+*   `day_name(date::Date, holidays::HolidayBase)`: Find corresponding holiday names for a date. If
     the given date is in the holiday cache this is a simple lookup. If it is not in cache, and
     expand is enabled, then the new year will be populated. Otherwise this will just return nothing.
-    
+
     Returns:
     - `AbstractString`: Holiday name for the given date, or Void if there is no corresponding holiday name.
 
-*   `countryRegions(country::AbstractString)`: For lookup of regions in a country
+*   `country_regions(country::AbstractString)`: For lookup of regions in a country
 
     Returns:
     - `Array{AbstractString,N}`: Recognized regions within a given country
@@ -81,7 +76,7 @@ To run the default tests:
 This test has three configurable constants you may want to change.
 
 regions:
-The keys of this dict are all country codes to test against. The corresponding Array is a list of province codes to test with this country. 
+The keys of this dict are all country codes to test against. The corresponding Array is a list of province codes to test with this country.
 
     const regions = Dict(
         "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
@@ -108,11 +103,11 @@ This script is useful for checking if this library is performing well in the ver
 `julia benchmark.jl`
 
 This program loops from start_date to end_date querying the name of every date on the way. With a relatively light load:
-    
+
     start_date = Date(2010, 1, 1)
     last_date = Date(2020, 1, 1)
 
-Julia should be about 8 times faster than python. For longer benchmarks this advantage increases.
+Julia should be about 64 times faster than python, after it has been run once.
 
-    Python: 13.841760 seconds (9.23 M allocations: 218.168 MB, 0.76% gc time)
-    Julia : 1.773025 seconds (3.06 M allocations: 93.850 MB, 1.53% gc time)
+    Python: 16.329613 seconds (9.10 M allocations: 212.836 MB, 0.74% gc time)
+    Julia : 0.264640 seconds (1.53 M allocations: 25.844 MB, 3.74% gc time)

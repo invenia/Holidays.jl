@@ -8,7 +8,7 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 
 @pyimport pyholiday
 
-start_date = Date(2010, 1, 1)
+start_date = Date(1970, 1, 1)
 last_date = Date(2020, 1, 1)
 
 regions = Dict(
@@ -28,12 +28,12 @@ function julia_test()
         println("   Testing country ",country)
         for province in provinces
             println("       Country: ",country, ", Province: ",province)
-            dates = holidayCache(country=country, region=province)
+            dates = holiday_cache(country=country, region=province)
 
             date = start_date
 
             while date < last_date
-                y = Holidays.dayName(date, dates)
+                y = day_name(date, dates)
                 date = date + Dates.Day(1)
             end
         end
@@ -59,11 +59,13 @@ function python_test()
 end
 
 function compare_versions()
+    @time julia_test()
+    println("Time for Julia Version, run 1")
+
     @time python_test()
     println("Time for Python Version")
-
     @time julia_test()
-    println("Time for Julia Version")
+    println("Time for Julia Version, run 2")
 end
 
 compare_versions()

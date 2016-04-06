@@ -24,8 +24,8 @@ regions = Dict(
 
 # Set first and last date in loop
 #~ start_date = Date(1990, 1, 1)
-start_date = Date(2016, 1, 1)
-last_date = Date(2018, 1, 1)
+start_date = Date(2000, 1, 1)
+last_date = Date(2001, 1, 1)
 
 println("Start Date:",start_date)
 println("Last Date:",last_date)
@@ -41,10 +41,23 @@ function day_names_equal(x, y)
     end
 end
 
-function compareHolidays(country, province)
+function expected_difference(country, province, date, python_name, julia_name)
+    """
+    Whenever you wish to allow a difference between the python and julia results, add it here.
+    """
+    if country == "CA" && province == "QC" && date >= Date(1953) &&
+            python_name == "National Patriotes Day" &&
+            julia_name == "National Patriots' Day"
+        return true
+    else
+        return false
+    end
+end
+
+function compare_holidays(country, province)
     success = true
 
-    dates = holidayCache(country=country, region=province, years=[2016])
+    dates = holiday_cache(country=country, region=province, years=[2016])
     pyholiday.load(country, province)
 
     date = start_date
@@ -54,11 +67,16 @@ function compareHolidays(country, province)
     try
         while date < last_date
             x = pyholiday.get(date)
-            y = dayName(date, dates)
+            y = day_name!(date, dates)
 
             if !day_names_equal(x, y)
-                println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
-                success = false
+                # For dates where holidays.py is wrong / uses a different name, want to not raise an error.
+                if expected_difference(country, province, date, x, y)
+
+                else
+                    println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+                    success = false
+                end
             end
 
             date = date + Dates.Day(1)
@@ -73,7 +91,7 @@ function compareHolidays(country, province)
         println("Last date tried:",date)
 
         x = pyholiday.get(date)
-        y = dayName(date, dates)
+        y = day_name!(date, dates)
 
         println("Value of X",x)
         println("Value of Y",y)
@@ -88,7 +106,7 @@ function loop_regions()
         println("Testing ",country)
         for province in provinces
             println("   Country: ",country, ", Province: ",province)
-            @test compareHolidays(country, province)
+            @test compare_holidays(country, province)
         end
     end
 end
