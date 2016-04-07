@@ -16,12 +16,18 @@ unshift!(PyVector(pyimport("sys")["path"]), "")
 regions = Dict(
     # Working Regions
     "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
-    "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"],
+    "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU",
+            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI",
+            "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
+            "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT",
+            "VT", "VA", "VI", "WA", "WV", "WI", "WY"],
     "MX"=>[""],
-    "NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
+    "NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN",
+           "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
     "AU" => ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"],
     "AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"],
-    "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
+    "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI",
+             "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
 )
 
 function day_names_equal(x, y)
@@ -50,7 +56,8 @@ end
 function compare_holidays(country, province, observed, start_date, end_date)
     success = true
 
-    dates = holiday_cache(country=country, region=province, observed=observed, expand=true, years=[2016])
+    dates = holiday_cache(country=country, region=province, observed=observed,
+                          expand=true, years=[2016])
     pyholiday.load(country, province, observed, true, [2016])
 
     date = start_date
@@ -63,13 +70,15 @@ function compare_holidays(country, province, observed, start_date, end_date)
             y = day_name!(date, dates)
 
             if !day_names_equal(x, y)
-                # For dates where holidays.py is wrong / uses a different name, want to not raise an error.
+                # For dates where holidays.py is wrong / uses a different name, no error.
                 if expected_difference(country, province, date, x, y)
 
                 else
                     println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
                     success = false
                 end
+
+            # If you want a record of successfully matched holidays as well, uncomment this.
             #elseif isa(x, AbstractString) && isa(y, AbstractString)
             #    println("       Success on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
             end
@@ -121,7 +130,8 @@ end
 function compare_holidays_no_expand(country, province, observed, start_date, end_date)
     success = true
 
-    dates = holiday_cache(country=country, region=province, observed=observed, expand=false, years=[2001, 2002, 2004])
+    dates = holiday_cache(country=country, region=province, observed=observed,
+                          expand=false, years=[2001, 2002, 2004])
     pyholiday.load(country, province, observed, false, [2001, 2002, 2004])
 
     date = start_date
@@ -134,11 +144,12 @@ function compare_holidays_no_expand(country, province, observed, start_date, end
             y = day_name!(date, dates)
 
             if !day_names_equal(x, y)
-                # For dates where holidays.py is wrong / uses a different name, want to not raise an error.
+                # For dates where holidays.py is wrong / uses a different name, no error
                 if expected_difference(country, province, date, x, y)
 
                 else
-                    println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+#~                     println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+                    println("       Failure on $date - Python '$x', Julia '$y'")
                     success = false
                 end
             #elseif isa(x, AbstractString) && isa(y, AbstractString)
@@ -304,10 +315,14 @@ end
 function test_region_list()
     println("Testing region list")
     country = "CA"
-    @test country_regions(country) == ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
+    expected = ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
+    @test country_regions(country) == expected
 end
 
 function test_exceptions()
+    """Verifies that exceptions are thrown for common bad arguments.
+    More can be added and tested later."""
+
     println("Testing raising exceptions")
     success = true
 
@@ -327,7 +342,8 @@ function test_exceptions()
     # Requestiong absent country must fail
     country = "doesn't exist"
     try
-        dates = holiday_cache(country=country, region="MB", observed=true, expand=true, years=[2016])
+        dates = holiday_cache(country=country, region="MB", observed=true,
+                              expand=true, years=[2016])
         println("ERROR: No exception thrown")
         success = false
     catch e
@@ -338,7 +354,7 @@ end
 
 test_easter()
 test_date_functions()
-test_region_list()
-verify_all_holidays()
 test_no_expand()
 test_exceptions()
+test_region_list()
+verify_all_holidays()

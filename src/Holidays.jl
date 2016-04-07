@@ -15,12 +15,18 @@ const WEEKEND = [Sat, Sun]
 
 const regions = Dict(
     "CA"=>["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"],
-    "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI", "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "VI", "WA", "WV", "WI", "WY"],
+    "US"=>["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU",
+            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MH", "MA", "MI",
+            "FM", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
+            "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT",
+            "VT", "VA", "VI", "WA", "WV", "WI", "WY"],
     "MX"=>[""],
-    "NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN", "STC", "WTL", "OTA", "STL", "CIT"],
+    "NZ"=>["NTL", "AUK", "TKI", "HKB", "WGN", "MBH", "NSN", "CAN",
+            "STC", "WTL", "OTA", "STL", "CIT"],
     "AU" => ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"],
     "AT" => ["B", "K", "N", "O", "S", "ST", "T", "V", "W"],
-    "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
+    "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP",
+            "SL", "SN", "ST", "SH", "TH"],
 )
 
 """
@@ -50,7 +56,7 @@ end
 
 """
 `sub_day(date::Date, weekday::Int, count::Int)`: counts backwards from the given date one
-week at a time, and returns a date `count` weeks in the past where the day of week == weekday.
+week at a time, and returns a date `count` weeks in the past where day of week == weekday.
 If the day of week of the start date is the same as the specified weekday, this will
 count back one week less.
 
@@ -72,7 +78,7 @@ end
 
 """
 `add_day(date::Date, weekday::Int, count::Int)`: counts forwards from the given date one
-week at a time, and returns a date `count` weeks in the future where the day of week == weekday.
+week at a time, and returns a date `count` weeks in the future where day of week == weekday.
 If the day of week of the start date is the same as the specified weekday, this will
 count forwards one week less.
 
@@ -149,7 +155,8 @@ function title(holidays::Dict{Date,AbstractString}, date::Date, day::AbstractStr
 end
 
 """
-`populate_ca!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+`populate_ca!(days::Dict{Date,AbstractString}, region::AbstractString,
+              observed::Bool, year::Int)`:
 for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year
 and region. For canada, regions are provinces / territories.
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
@@ -158,7 +165,8 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_ca!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_ca!(days::Dict{Date,AbstractString}, region::AbstractString,
+                      observed::Bool, year::Int)
     # New Year's Day
     if year >= 1867
         name = "New Year's Day"
@@ -338,7 +346,8 @@ function populate_ca!(days::Dict{Date,AbstractString}, region::AbstractString, o
 end
 
 """
-`populate_us!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+`populate_us!(days::Dict{Date,AbstractString}, region::AbstractString,
+              observed::Bool, year::Int)`:
 for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year
 and region. For the USA, regions are states.
 If observed is true, then when a holiday conflicts with a weekend and is legally observed on
@@ -347,7 +356,8 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_us!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_us!(days::Dict{Date,AbstractString}, region::AbstractString,
+                      observed::Bool, year::Int)
     # New Year's Day
     if year > 1870
         name = "New Year's Day"
@@ -933,7 +943,8 @@ function populate_us!(days::Dict{Date,AbstractString}, region::AbstractString, o
 end
 
 """
-`populate_mx!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+`populate_mx!(days::Dict{Date,AbstractString}, region::AbstractString,
+              observed::Bool, year::Int)`:
 for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 Mexico has no regions relevant for holiday calculation.
 
@@ -943,7 +954,8 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_mx!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_mx!(days::Dict{Date,AbstractString}, region::AbstractString,
+                      observed::Bool, year::Int)
     # New Year's Day
     name = "Año Nuevo [New Year's Day]"
     title(days, Date(year, 1, 1), name)
@@ -1037,7 +1049,8 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_nz!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_nz!(days::Dict{Date,AbstractString}, region::AbstractString,
+                      observed::Bool, year::Int)
     # Holidays to research:
     # Bank Holidays Act 1873
     # The Employment of Females Act 1873
@@ -1217,7 +1230,8 @@ function populate_nz!(days::Dict{Date,AbstractString}, region::AbstractString, o
 end
 
 """
-`populate_au!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+`populate_au!(days::Dict{Date,AbstractString}, region::AbstractString,
+              observed::Bool, year::Int)`:
 for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 For Australia, regions are provinces.
 
@@ -1227,7 +1241,8 @@ another date, a seperate entry will be created for the observed date.
 Returns:
 - Nothing
 """
-function populate_au!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_au!(days::Dict{Date,AbstractString}, region::AbstractString,
+                      observed::Bool, year::Int)
     # Holidays to research:
     # ACT:  Holidays Act 1958
     # NSW:  Public Holidays Act 2010
@@ -1474,7 +1489,8 @@ function populate_at!(days::Dict{Date,AbstractString}, region::AbstractString, o
 end
 
 """
-`populate_de!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)`:
+`populate_de!(days::Dict{Date,AbstractString}, region::AbstractString,
+              observed::Bool, year::Int)`:
 
 for each holiday, sets days[holidayDate] = holiday_name, for all holidays in the given year.
 For Germany, regions are provinces.
@@ -1519,7 +1535,8 @@ are some weired edge cases:
       municipalities in Saxony (SN) and Thuringia (TH). We exclude it from
       both provinces.
 """
-function populate_de!(days::Dict{Date,AbstractString}, region::AbstractString, observed::Bool, year::Int)
+function populate_de!(days::Dict{Date,AbstractString}, region::AbstractString,
+         observed::Bool, year::Int)
     if year <= 1989
         return
     end
@@ -1592,7 +1609,8 @@ const populators =  Dict{AbstractString, Function}(
 )
 
 """
-`holiday_cache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])`:
+`holiday_cache(; country::AbstractString="CA", region::AbstractString="MB",
+               expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])`:
 
 Populates holiday cache for the given years, country, and region. If observed is true, then
 alternative observed dates will be set as well. If expand is true, then whenever a lookup
@@ -1601,9 +1619,11 @@ is made for a non cached date, that year of holidays will be populated in the ca
 Returns:
 - `HolidayBase`: The cache for future calls to lookup dates.
 """
-function holiday_cache(; country::AbstractString="CA", region::AbstractString="MB", expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])
+function holiday_cache(; country::AbstractString="CA", region::AbstractString="MB",
+                       expand::Bool=true, observed::Bool=true, years::Array{Int}=Int[])
     if !haskey(populators, country)
-        throw(ArgumentError("Invalid country \"$country\"; valid countries are ($(join(keys(populators))))"))
+        valid = join(keys(populators))
+        throw(ArgumentError("Invalid country \"$country\"; valid countries are: ", valid))
     end
 
     years = Set(years)
@@ -1619,12 +1639,13 @@ function holiday_cache(; country::AbstractString="CA", region::AbstractString="M
 end
 
 """
-`day_name!(date::Date, holidays::HolidayBase)`: Find corresponding holiday names for a date. If
-the given date is in the holiday cache this is a simple lookup. If it is not in cache, and
-expand is enabled, then the new year will be populated. Otherwise this will just return nothing.
+`day_name!(date::Date, holidays::HolidayBase)`: Find corresponding holiday names for a date.
+If the given date is in the holiday cache this is a simple lookup. If it is not in cache,
+and expand is enabled, then the new year will be populated. Otherwise this will
+just return nothing.
 
 Returns:
-- `AbstractString`: Holiday name for the given date, or Void if there is no corresponding holiday name.
+- `AbstractString`: Holiday name for the given date, or Void if day has no name.
 """
 function day_name!(date::Date, holidays::HolidayBase)
     if holidays.expand && !(Dates.year(date) in holidays.years)
