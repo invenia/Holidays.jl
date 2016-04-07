@@ -25,8 +25,9 @@ regions = Dict(
 )
 
 # Set first and last date in loop
-start_date = Date(1900, 1, 1)
-last_date = Date(2020, 1, 1)
+# 1890 to 2030 will ensure high test coverage for all lines of code
+start_date = Date(1890, 1, 1)
+last_date = Date(2030, 1, 1)
 
 function day_names_equal(x, y)
     if isa(x, AbstractString) && isa(y, AbstractString)
@@ -116,6 +117,7 @@ function loop_regions()
 end
 
 function test_easter()
+    println("Testing easter")
     success = true
 
     # Hard coded known correct dates for easter - Will be compared to my calculated version.
@@ -184,11 +186,11 @@ function test_easter()
         end
     end
 
-    println("Easter passed")
-    return success
+    @test success == true
 end
 
 function test_date_functions()
+    println("Testing date functions")
     ## Test 1: Adding mondays to monday
     date = Date(1990)
     #This should be a monday, testing just in case.
@@ -222,10 +224,15 @@ function test_date_functions()
     # If count is 2, goes back another week
     prev_week_tuesday = Holidays.sub_day(date, Tue, 2)
     @test date - prev_week_tuesday == Base.Dates.Day(13)
-
-    println("add_day and sub_day passed")
 end
 
-loop_regions()
-@test test_easter()
+function test_region_list()
+    println("Testing region list")
+    country = "CA"
+    @test country_regions(country) == ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
+end
+
+test_easter()
 test_date_functions()
+test_region_list()
+loop_regions()
