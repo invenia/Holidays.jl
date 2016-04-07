@@ -1627,7 +1627,7 @@ Returns:
 - `AbstractString`: Holiday name for the given date, or Void if there is no corresponding holiday name.
 """
 function day_name!(date::Date, holidays::HolidayBase)
-    if !(Dates.year(date) in holidays.years)
+    if holidays.expand && !(Dates.year(date) in holidays.years)
         populate = populators[holidays.country]
         populate(holidays.dates, holidays.region, holidays.observed, Dates.year(date))
         push!(holidays.years, Dates.year(date))

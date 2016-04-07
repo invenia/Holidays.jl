@@ -24,11 +24,6 @@ regions = Dict(
     "DE" => ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"],
 )
 
-# Set first and last date in loop
-# 1890 to 2030 will ensure high test coverage for all lines of code
-start_date = Date(1890, 1, 1)
-last_date = Date(2030, 1, 1)
-
 function day_names_equal(x, y)
     if isa(x, AbstractString) && isa(y, AbstractString)
         return x == y
@@ -52,18 +47,18 @@ function expected_difference(country, province, date, python_name, julia_name)
     end
 end
 
-function compare_holidays(country, province, observed)
+function compare_holidays(country, province, observed, start_date, end_date)
     success = true
 
     dates = holiday_cache(country=country, region=province, observed=observed, expand=true, years=[2016])
-    pyholiday.load(country, province, observed, true)
+    pyholiday.load(country, province, observed, true, [2016])
 
     date = start_date
     x = 0
     y = 0
 
     try
-        while date < last_date
+        while date < end_date
             x = pyholiday.get(date)
             y = day_name!(date, dates)
 
@@ -101,17 +96,97 @@ function compare_holidays(country, province, observed)
     return success
 end
 
-function loop_regions()
+function verify_all_holidays()
     println("Looping the following regions:", regions)
+
+    # Set first and last date in loop
+    # 1890 to 2030 will ensure high test coverage for all lines of code
+    #~ start_date = Date(1890, 1, 1)
+    start_date = Date(1890, 1, 1)
+    end_date = Date(2030, 1, 1)
+
     println("Start Date:",start_date)
-    println("Last Date:",last_date)
+    println("Last Date:",end_date)
 
     for (country, provinces) in regions
         println("Testing ",country)
         for province in provinces
             println("   Country: ",country, ", Province: ",province)
-            @test compare_holidays(country, province, true)
-            @test compare_holidays(country, province, false)
+            @test compare_holidays(country, province, true, start_date, end_date)
+            @test compare_holidays(country, province, false, start_date, end_date)
+        end
+    end
+end
+
+function compare_holidays_no_expand(country, province, observed, start_date, end_date)
+    success = true
+
+    dates = holiday_cache(country=country, region=province, observed=observed, expand=false, years=[2001, 2002, 2004])
+    pyholiday.load(country, province, observed, false, [2001, 2002, 2004])
+
+    date = start_date
+    x = 0
+    y = 0
+
+    try
+        while date < end_date
+            x = pyholiday.get(date)
+            y = day_name!(date, dates)
+
+            if !day_names_equal(x, y)
+                # For dates where holidays.py is wrong / uses a different name, want to not raise an error.
+                if expected_difference(country, province, date, x, y)
+
+                else
+                    println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+                    success = false
+                end
+            #elseif isa(x, AbstractString) && isa(y, AbstractString)
+            #    println("       Success on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+            end
+
+            date = date + Dates.Day(1)
+        end
+
+    catch e
+        success = false
+        whos()
+        println("Error",e)
+        println("Value of X",x)
+        println("Value of Y",y)
+        println("Last date tried:",date)
+
+        x = pyholiday.get(date)
+        y = day_name!(date, dates)
+
+        println("Value of X",x)
+        println("Value of Y",y)
+
+    end
+
+    return success
+end
+
+function test_no_expand()
+    """
+    When expand is off, all years passed at the start should be populated.
+    All years NOT passed should return nothing.
+    """
+
+    println("Testing disabled expansion")
+
+    start_date = Date(2000, 1, 1)
+    end_date = Date(2005, 1, 1)
+
+    println("Start Date:",start_date)
+    println("Last Date:",end_date)
+
+    for (country, provinces) in regions
+        println("Testing ",country)
+        for province in provinces
+            println("   Country: ",country, ", Province: ",province)
+            @test compare_holidays_no_expand(country, province, true, start_date, end_date)
+            @test compare_holidays_no_expand(country, province, false, start_date, end_date)
         end
     end
 end
@@ -232,7 +307,38 @@ function test_region_list()
     @test country_regions(country) == ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
 end
 
+function test_exceptions()
+    println("Testing raising exceptions")
+    success = true
+
+    # Requestiong absent country must fail
+    country = "doesn't exist"
+    try
+        country_regions(country)
+        println("ERROR: No exception thrown")
+        success = false
+    catch e
+    end
+
+    @test success == true
+
+    success = true
+
+    # Requestiong absent country must fail
+    country = "doesn't exist"
+    try
+        dates = holiday_cache(country=country, region="MB", observed=true, expand=true, years=[2016])
+        println("ERROR: No exception thrown")
+        success = false
+    catch e
+    end
+
+    @test success == true
+end
+
 test_easter()
 test_date_functions()
 test_region_list()
-loop_regions()
+verify_all_holidays()
+test_no_expand()
+test_exceptions()
