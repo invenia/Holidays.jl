@@ -33,7 +33,7 @@ function julia_test()
             date = start_date
 
             while date < last_date
-                y = day_name(date, dates)
+                y = day_name!(date, dates)
                 date = date + Dates.Day(1)
             end
         end
@@ -46,7 +46,7 @@ function python_test()
         println("   Testing country ",country)
         for province in provinces
             println("       Country: ",country, ", Province: ",province)
-            pyholiday.load(country, province)
+            pyholiday.load(country, province, true, true, [])
 
             date = start_date
 
