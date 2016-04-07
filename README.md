@@ -1,7 +1,6 @@
 # Holidays.jl
 
 [![Build Status](https://travis-ci.org/invenia/Holidays.jl.svg?branch=master)](https://travis-ci.org/invenia/Holidays.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/4ocp44ti3qibt7kr?svg=true)](https://ci.appveyor.com/project/akrasian/holidays-jl)
 [![Coverage Status](https://coveralls.io/repos/github/invenia/Holidays.jl/badge.svg?branch=master)](https://coveralls.io/github/invenia/Holidays.jl?branch=master)
 [![codecov.io](https://codecov.io/github/invenia/Holidays.jl/coverage.svg?branch=master)](https://codecov.io/github/invenia/Holidays.jl?branch=master)
 
@@ -65,6 +64,8 @@ Presently, there are only a few functions exported by this module by default. co
 
 
 ## Running Tests
+
+There is a build script for appveyor, but currently appveyor is disabled. PyCall in windows has some critical issues which makes the tests impossible to run.
 
 #### Preparing for Tests
 

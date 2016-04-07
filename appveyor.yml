@@ -45,11 +45,6 @@ install:
   # Install requires python libraries
   - "pip install --user holidays"
 
-  # PyCall will not be able to find the new python unless we rebuild it with the correct path.
-  #~ - "ENV[\"PYTHON\"] = \"%PYTHON%\""
-  # - "SET PYTHON=C:\\projects\\python\\python"
-  # - C:\projects\julia\bin\julia -e "Pkg.build(\"PyCall\")"
-
 build_script:
   # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
