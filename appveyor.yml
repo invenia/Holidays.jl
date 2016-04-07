@@ -25,15 +25,18 @@ install:
 
   #### Install Python
   # Set up python
-  
+
   # Download
   - ps: (new-object net.webclient).DownloadFile("https://www.python.org/ftp/python/2.7.11/python-2.7.11.amd64.msi", "C:\projects\python-binary.msi")
-  
+
   # Install
   - msiexec.exe /a C:\projects\python-binary.msi /qn /norestart TARGETDIR="C:\\projects\\python"
-  
-  - SET PATH="C:\\projects\\python;C:\\projects\\python\\Tools\\Scripts;%PATH%;"
+
+  - "SET PATH=C:\\projects\\python;C:\\projects\\python\\Scripts;C:\\projects\\python\\Tools\\Scripts;%PATH%;"
   # - "SET PATH=\"C:\\projects\\python;C:\\projects\\python\\Tools\\Scripts;%PATH%\""
+
+  # Windows installer doesn't seem to give pip by default, need to explicitly request it:
+  - "C:\\projects\\python\\python -m ensurepip"
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
