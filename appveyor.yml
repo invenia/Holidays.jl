@@ -1,8 +1,4 @@
 environment:
-    global:
-        PYTHON: "C:\\Python27"
-        PYTHON_VERSION: "2.7.x"
-        PYTHON_ARCH: "32"
     matrix:
         -   JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
         -   JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
@@ -31,12 +27,15 @@ install:
 
   #### Install Python
   # Set up python
-  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
-
-  # Prepend newly installed Python to the PATH of this build (this cannot be
-  # done from inside the powershell script as it would require to restart
-  # the parent CMD process).
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  
+  # Download
+  - ps: (new-object net.webclient).DownloadFile("https://www.python.org/ftp/python/2.7.11/python-2.7.11.amd64.msi", "C:\projects\python-binary.msi")
+  
+  # Install
+  - msiexec.exe /a C:\projects\python-binary.msi /qn /norestart TARGETDIR="C:\\projects\\python"
+  
+  - SET PATH="C:\\projects\\python;C:\\projects\\python\\Tools\\Scripts;%PATH%;"
+  # - "SET PATH=\"C:\\projects\\python;C:\\projects\\python\\Tools\\Scripts;%PATH%\""
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
@@ -47,8 +46,8 @@ install:
 
   # PyCall will not be able to find the new python unless we rebuild it with the correct path.
   #~ - "ENV[\"PYTHON\"] = \"%PYTHON%\""
-  - "SET PYTHON=%PYTHON%;"
-  - C:\projects\julia\bin\julia -e "Pkg.build(\"PyCall\")"
+  # - "SET PYTHON=C:\\projects\\python\\python"
+  # - C:\projects\julia\bin\julia -e "Pkg.build(\"PyCall\")"
 
 build_script:
   # Need to convert from shallow to complete for Pkg.clone to work
