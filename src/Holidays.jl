@@ -1,9 +1,7 @@
-__precompile__()
-
 module Holidays
 export HolidayBase, country_regions, holiday_cache, day_name!
 
-import Base.Dates: Mon, Tue, Wed, Thu, Fri, Sat, Sun, dayofweek, tonext, toprev
+using Dates: Dates, Date, Mon, Tue, Wed, Thu, Fri, Sat, Sun, dayofweek, tonext, toprev
 
 # Credits:
 # This program closely borrows the logic for calculating most holidays from
@@ -33,10 +31,10 @@ const regions = Dict(
 `HolidayBase`: stores cached information about holidays to speed up future lookups,
 as well as the current locale information.
 """
-type HolidayBase
+struct HolidayBase
     """dates::Dict{Date,AbstractString}: Maps dates to holidays. If multiple holidays
     coincide then names will be concatenated with commas"""
-    dates::Dict{Date,AbstractString}
+    dates::Dict{Date, AbstractString}
 
     """years::Set{Int}: All years for which cached holiday names exist."""
     years::Set{Int}
@@ -65,10 +63,10 @@ Returns:
 """
 function sub_day(date::Date, weekday::Int, count::Int)
     if dayofweek(date) == weekday
-        count = count -1
+        count = count - 1
     end
 
-    for i in range(0, count)
+    for i in 1:count
         date = Dates.toprev(date, weekday, same=false)
     end
 
@@ -87,10 +85,10 @@ Returns:
 """
 function add_day(date::Date, weekday::Int, count::Int)
     if dayofweek(date) == weekday
-        count = count -1
+        count = count - 1
     end
 
-    for i in range(0, count)
+    for i in 1:count
         date = Dates.tonext(date, weekday, same=false)
     end
 
@@ -1325,7 +1323,7 @@ function populate_au!(days::Dict{Date,AbstractString}, region::AbstractString,
 
     # Western Australia Day
     if region == "WA" && year > 1832
-        name = year >= 2015? "Western Australia Day" : "Foundation Day"
+        name = year >= 2015 ? "Western Australia Day" : "Foundation Day"
         title(days, add_day(Date(year, 6, 1), Mon, 1), name)
     end
 
@@ -1553,7 +1551,7 @@ function populate_de!(days::Dict{Date,AbstractString}, region::AbstractString,
         if region == "BB"
             # will always be a Sunday and we have no "observed" rule so
             # this is pretty pointless but it's nonetheless an official holiday by law
-            title(days, easter(year), "Ostern")
+            title(days, easter(year), "Ostersonntag")
         end
 
         title(days, easter(year) + Dates.Day(1), "Ostermontag")
@@ -1563,7 +1561,7 @@ function populate_de!(days::Dict{Date,AbstractString}, region::AbstractString,
         if region == "BB"
             # will always be a Sunday and we have no "observed" rule so
             # this is pretty pointless but it's nonetheless an official holiday by law
-            title(days, easter(year) + Dates.Day(49), "Pfingsten")
+            title(days, easter(year) + Dates.Day(49), "Pfingstsonntag")
         end
 
         title(days, easter(year) + Dates.Day(50), "Pfingstmontag")
@@ -1657,7 +1655,7 @@ function day_name!(date::Date, holidays::HolidayBase)
     if haskey(holidays.dates, date)
         return holidays.dates[date]
     else
-        return Void
+        return nothing
     end
 end
 
