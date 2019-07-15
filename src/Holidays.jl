@@ -1551,7 +1551,7 @@ function populate_de!(days::Dict{Date,AbstractString}, region::AbstractString,
         if region == "BB"
             # will always be a Sunday and we have no "observed" rule so
             # this is pretty pointless but it's nonetheless an official holiday by law
-            title(days, easter(year), "Ostern")
+            title(days, easter(year), "Ostersonntag")
         end
 
         title(days, easter(year) + Dates.Day(1), "Ostermontag")
@@ -1561,7 +1561,7 @@ function populate_de!(days::Dict{Date,AbstractString}, region::AbstractString,
         if region == "BB"
             # will always be a Sunday and we have no "observed" rule so
             # this is pretty pointless but it's nonetheless an official holiday by law
-            title(days, easter(year) + Dates.Day(49), "Pfingsten")
+            title(days, easter(year) + Dates.Day(49), "Pfingstsonntag")
         end
 
         title(days, easter(year) + Dates.Day(50), "Pfingstmontag")
@@ -1667,7 +1667,7 @@ Returns:
 """
 function country_regions(country::AbstractString)
     if haskey(regions, country)
-        return regions[Symbol(country)]
+        return regions[country]
     else
         throw(ArgumentError("Unknown Country: ",country))
     end
