@@ -1,0 +1,18 @@
+name = "Holidays"
+uuid = "30e1845e-f96f-54ba-841f-ab9c7d10a64f"
+author = "Invenia Technical Computing"
+version = "0.2.0"
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+
+[compat]
+julia = "1"
+
+[extras]
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "PyCall"]

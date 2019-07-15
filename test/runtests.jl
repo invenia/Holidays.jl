@@ -1,14 +1,22 @@
-using Base.Test
-using PyCall
+using Dates: Dates, Date, Mon, Tue, Wed, Thu, Fri, Sat, Sun, dayofweek, tonext, toprev
 using Holidays
-using Compat
+using PyCall
+using Test
 
-import Base.Dates: Mon, Tue, Wed, Thu, Fri, Sat, Sun, dayofweek, tonext, toprev
 
 #Force load of python module in current directory
-unshift!(PyVector(pyimport("sys")["path"]), "")
+pushfirst!(PyVector(pyimport("sys")["path"]), "")
+pyimport_conda("holidays", "holidays", "conda-forge")  # just make sure it is installed.
+pyholiday = pyimport("pyholiday")
 
-@pyimport pyholiday
+
+####### EVIL HACK
+# This test code strongly assumes that you can infact print nothing
+# So until tests can be refactor more, we are monkey-patching it 
+Base.print(io::IO, ::Nothing) = "nothing"
+
+###############
+
 
 # Constants
 
@@ -74,7 +82,7 @@ function compare_holidays(country, province, observed, start_date, end_date)
                 if expected_difference(country, province, date, x, y)
 
                 else
-                    println("       Failure on ",date, " - Python: \"",x,"\", Julia: \"",y,"\"")
+                    println("       Failure on ", date, " - Python: \"", x, "\", Julia: \"", y, "\"")
                     success = false
                 end
 
@@ -88,7 +96,6 @@ function compare_holidays(country, province, observed, start_date, end_date)
 
     catch e
         success = false
-        whos()
         println("Error",e)
         println("Value of X",x)
         println("Value of Y",y)
@@ -161,36 +168,35 @@ function compare_holidays_no_expand(country, province, observed, start_date, end
 
     catch e
         success = false
-        whos()
         println("Error",e)
-        println("Value of X",x)
-        println("Value of Y",y)
-        println("Last date tried:",date)
+        println("Value of X: ", x)
+        println("Value of Y: ", y)
+        println("Last date tried: ", date)
 
         x = pyholiday.get(date)
         y = day_name!(date, dates)
 
-        println("Value of X",x)
-        println("Value of Y",y)
+        println("Value of X:", x)
+        println("Value of Y:", y)
 
     end
 
     return success
 end
 
-function test_no_expand()
-    """
+@testset "test_no_expand" begin
+    #==
     When expand is off, all years passed at the start should be populated.
     All years NOT passed should return nothing.
-    """
+    ==#
 
     println("Testing disabled expansion")
 
     start_date = Date(2000, 1, 1)
     end_date = Date(2005, 1, 1)
 
-    println("Start Date:",start_date)
-    println("Last Date:",end_date)
+    println("Start Date: ", start_date)
+    println("Last Date: ", end_date)
 
     for (country, provinces) in regions
         println("Testing ",country)
@@ -202,7 +208,7 @@ function test_no_expand()
     end
 end
 
-function test_easter()
+@testset "test_easter" begin
     println("Testing easter")
     success = true
 
@@ -275,7 +281,7 @@ function test_easter()
     @test success == true
 end
 
-function test_date_functions()
+@testset "test_date_functions" begin
     println("Testing date functions")
     ## Test 1: Adding mondays to monday
     date = Date(1990)
@@ -283,43 +289,43 @@ function test_date_functions()
     @test dayofweek(date) == Mon
     # This should resolve to the same date
     next_monday = Holidays.add_day(date, Mon, 1)
-    @test next_monday - date == Base.Dates.Day(0)
+    @test next_monday - date == Dates.Day(0)
     #If count is 1, goes ahead a week
     next_week_monday = Holidays.add_day(date, Mon, 2)
-    @test next_week_monday - date == Base.Dates.Day(7)
+    @test next_week_monday - date == Dates.Day(7)
 
     ## Test 2: Subtracting mondays from monday
     # This should resolve to the same date
     prev_monday = Holidays.sub_day(date, Mon, 1)
-    @test date - prev_monday == Base.Dates.Day(0)
+    @test date - prev_monday == Dates.Day(0)
     #If count is 2, goes back a week
     prev_week_monday = Holidays.sub_day(date, Mon, 2)
-    @test date - prev_week_monday == Base.Dates.Day(7)
+    @test date - prev_week_monday == Dates.Day(7)
 
     ## Test 3: Adding tuesdays to monday
     next_tuesday = Holidays.add_day(date, Tue, 1)
-    @test next_tuesday - date == Base.Dates.Day(1)
+    @test next_tuesday - date == Dates.Day(1)
     #If count is 2, goes ahead a week and a day
     next_week_tuesday = Holidays.add_day(date, Tue, 2)
-    @test next_week_tuesday - date == Base.Dates.Day(8)
+    @test next_week_tuesday - date == Dates.Day(8)
 
     ## Test 2: Subtracting tuesdays from monday
     # This should resolve to the same date
     prev_tuesday = Holidays.sub_day(date, Tue, 1)
-    @test date - prev_tuesday == Base.Dates.Day(6)
+    @test date - prev_tuesday == Dates.Day(6)
     # If count is 2, goes back another week
     prev_week_tuesday = Holidays.sub_day(date, Tue, 2)
-    @test date - prev_week_tuesday == Base.Dates.Day(13)
+    @test date - prev_week_tuesday == Dates.Day(13)
 end
 
-function test_region_list()
+@testest "test_region_list" begin
     println("Testing region list")
     country = "CA"
     expected = ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YU"]
     @test country_regions(country) == expected
 end
 
-function test_exceptions()
+@testset "test_exceptions" begin
     """Verifies that exceptions are thrown for common bad arguments.
     More can be added and tested later."""
 
@@ -352,9 +358,3 @@ function test_exceptions()
     @test success == true
 end
 
-test_easter()
-test_date_functions()
-test_no_expand()
-test_exceptions()
-test_region_list()
-verify_all_holidays()
